@@ -88,6 +88,10 @@
   .trend-badge.neutral{ background:rgba(127,135,148,0.10); border-color:rgba(127,135,148,0.35); color:var(--ink-dim); }
   .trend-badge small{ font-family:'Inter',sans-serif; font-weight:400; color:var(--ink-dim); font-size:10.5px; }
 
+  .ta-block{ margin-bottom:12px; padding:12px 13px; background:#1a1a22; border:1px solid var(--panel-edge); border-radius:8px; }
+  .ta-title{ color:var(--amber); font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; }
+  .ta-text{ font-size:13px; line-height:1.55; }
+
   .ind-toggle{ margin-top:14px; width:100%; background:none; border:1px solid var(--panel-edge); border-radius:8px; padding:9px 12px; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; font-size:11.5px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:8px; flex-wrap:wrap; }
   .tally{ display:flex; gap:8px; flex-wrap:wrap; }
   .tally span{ display:flex; align-items:center; gap:4px; }
@@ -504,6 +508,42 @@ function atrCalc(highs, lows, closes, period = 14) {
   for (let i = 1; i < closes.length; i++) trs.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1])));
   return sma(trs, period);
 }
+function buildAnalysisText(ctx) {
+  const { trendState, r, adxRes, macdHist, volRatio, lastCandleUp, tfLabel, bandState } = ctx;
+  const parts = [];
+
+  let trendSentence;
+  if (trendState === 'alcista') trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores describe una tendencia de corto plazo <b>alcista</b>`;
+  else if (trendState === 'bajista') trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores describe una tendencia de corto plazo <b>bajista</b>`;
+  else trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores no muestra una tendencia clara — el mercado está más bien <b>lateral</b>`;
+
+  if (adxRes) {
+    trendSentence += adxRes.adx >= 25
+      ? `, y el ADX (${adxRes.adx.toFixed(0)}) confirma que es una tendencia con fuerza real, no solo ruido de corto plazo.`
+      : `, aunque el ADX (${adxRes.adx.toFixed(0)}) todavía no confirma fuerza real detrás de ese movimiento.`;
+  } else trendSentence += '.';
+  parts.push(trendSentence);
+
+  if (r != null) {
+    if (r >= 70) parts.push(`El RSI está en ${r.toFixed(0)}, en zona de sobrecompra: el movimiento reciente fue rápido y eso aumenta la chance de una pausa o corrección.`);
+    else if (r <= 30) parts.push(`El RSI está en ${r.toFixed(0)}, en zona de sobreventa: la baja reciente fue rápida y eso aumenta la chance de un rebote.`);
+    else parts.push(`El RSI está en ${r.toFixed(0)}, en zona neutral, sin señal de extremo por ahora.`);
+  }
+
+  if (macdHist > 0) parts.push('El MACD acompaña con momentum a favor del movimiento actual.');
+  else if (macdHist < 0) parts.push('El MACD muestra momentum en contra del movimiento actual.');
+  else parts.push('El MACD está casi plano, sin aportar momentum claro en ningún sentido.');
+
+  if (bandState === 'upper') parts.push('El precio está tocando la banda superior de Bollinger, es decir, extendido respecto a su promedio reciente.');
+  else if (bandState === 'lower') parts.push('El precio está tocando la banda inferior de Bollinger, es decir, extendido a la baja respecto a su promedio reciente.');
+
+  if (volRatio > 1.2) parts.push(lastCandleUp ? 'El volumen acompaña la última vela alcista, dándole algo de respaldo al movimiento.' : 'El volumen acompaña la última vela bajista, dándole algo de respaldo a la baja.');
+  else parts.push('El volumen está dentro de lo normal, sin confirmar con fuerza el movimiento reciente.');
+
+  parts.push('Esto describe el estado <b>actual</b> del mercado según estos indicadores, no una proyección de hacia dónde va a ir el precio después.');
+  return parts.join(' ');
+}
+
 function dotSpan(tag) { return `<span class="ind-dot ${tag}"></span>`; }
 function buildIndicatorHTML(name, tag, text, info) {
   return `<div class="ind-row ${info ? 'info' : ''}">${dotSpan(info ? 'info' : tag)}<div class="ind-body"><div class="ind-name">${name}</div><div class="ind-text">${text}</div></div></div>`;
@@ -601,6 +641,13 @@ async function loadIndicators(coin) {
     const atrPct = (atrVal / lastClose) * 100;
     const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.` };
 
+    const bandState = lastClose >= bb.upper ? 'upper' : lastClose <= bb.lower ? 'lower' : 'inside';
+    const analysisText = buildAnalysisText({
+      trendState, r, adxRes, macdHist: m.hist, volRatio, lastCandleUp, bandState,
+      tfLabel: TF_LABELS[currentInterval]
+    });
+    const analysisHTML = `<div class="ta-block"><div class="ta-title">Análisis técnico</div><div class="ta-text">${analysisText}</div></div>`;
+
     const tallyEl = document.getElementById('tally-' + coin.sym);
     if (tallyEl) {
       tallyEl.innerHTML =
@@ -613,6 +660,7 @@ async function loadIndicators(coin) {
     const indEl = document.getElementById('indicators-' + coin.sym);
     if (indEl) {
       indEl.innerHTML =
+        analysisHTML +
         items.map(i => buildIndicatorHTML(i.name, i.tag, i.text)).join('') +
         buildIndicatorHTML(infoItem.name, null, infoItem.text, true) +
         `<div class="ind-note">Esto describe el estado <b>actual</b> del mercado en velas de ${TF_LABELS[currentInterval]}, no predice qué va a pasar después. Ningún indicador, combinado o solo, garantiza una ganancia.</div>`;
