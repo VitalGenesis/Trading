@@ -1,0 +1,9 @@
+{
+  "name": "Mercado en Vivo",
+  "short_name": "Mercado",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#14141a",
+  "theme_color": "#14141a",
+  "description": "Cotizaciones de BTC, ETH y SOL en tiempo real."
+}

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mercado en Vivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14141a;
+    --panel:#1c1c24;
+    --panel-edge:#2a2a34;
+    --ink:#eae7df;
+    --ink-dim:#8b8a94;
+    --amber:#f2a93b;
+    --up:#35d499;
+    --down:#ff5c72;
+    --neutral:#7f8794;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: radial-gradient(ellipse at top, #1a1a22 0%, var(--bg) 60%);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    overscroll-behavior:none;
+  }
+  .wrap{
+    max-width:520px; margin:0 auto;
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    padding:env(safe-area-inset-top,20px) 16px 24px;
+  }
+  header{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding:8px 4px 18px;
+    border-bottom:1px solid var(--panel-edge);
+  }
+  header .title{
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:700; font-size:15px; letter-spacing:2px;
+    color:var(--amber); text-transform:uppercase;
+  }
+  header .status{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px; color:var(--ink-dim);
+    display:flex; align-items:center; gap:6px;
+  }
+  .dot{width:6px; height:6px; border-radius:50%; background:var(--ink-dim); transition:background .3s;}
+  .dot.live{background:var(--up); box-shadow:0 0 6px var(--up);}
+  .board{ margin-top:18px; display:flex; flex-direction:column; gap:10px; }
+  .row{
+    background:linear-gradient(180deg, var(--panel), #18181f);
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:14px 16px;
+    position:relative;
+    overflow:hidden;
+    transition:border-color .25s;
+  }
+  .row.flash-up{ border-color:var(--up); }
+  .row.flash-down{ border-color:var(--down); }
+  .row-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .sym-block{ display:flex; align-items:baseline; gap:8px; }
+  .sym{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; letter-spacing:1px; }
+  .pair{ font-size:11px; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; }
+  .chg{
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px;
+    padding:3px 8px; border-radius:20px;
+  }
+  .chg.up{ color:var(--up); background:rgba(53,212,153,0.12); }
+  .chg.down{ color:var(--down); background:rgba(255,92,114,0.12); }
+  .price{
+    font-family:'IBM Plex Mono',monospace; font-weight:600;
+    font-size:32px; margin-top:6px; letter-spacing:0.5px;
+    font-variant-numeric:tabular-nums;
+  }
+  .digit{ display:inline-block; transition:transform .18s ease, color .18s ease; }
+  .digit.pulse-up{ animation:flipUp .35s ease; color:var(--up); }
+  .digit.pulse-down{ animation:flipDown .35s ease; color:var(--down); }
+  @keyframes flipUp{ 0%{transform:translateY(40%); opacity:0.3;} 100%{transform:translateY(0); opacity:1;} }
+  @keyframes flipDown{ 0%{transform:translateY(-40%); opacity:0.3;} 100%{transform:translateY(0); opacity:1;} }
+  .range{ margin-top:12px; }
+  .range-labels{
+    display:flex; justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim);
+    margin-bottom:4px;
+  }
+  .range-track{
+    height:4px; border-radius:4px; background:#2a2a34; position:relative; overflow:hidden;
+  }
+  .range-fill{
+    position:absolute; top:0; bottom:0;
+    background:linear-gradient(90deg, var(--down), var(--amber), var(--up));
+    opacity:0.55; left:0; right:0;
+  }
+  .range-marker{
+    position:absolute; top:-2px; width:2px; height:8px; background:var(--ink);
+    border-radius:1px; transition:left .3s ease;
+  }
+
+  /* Indicadores */
+  .ind-toggle{
+    margin-top:14px; width:100%; background:none; border:1px solid var(--panel-edge);
+    border-radius:8px; padding:9px 12px; color:var(--ink-dim);
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer;
+  }
+  .tally{ display:flex; gap:8px; }
+  .tally span{ display:flex; align-items:center; gap:4px; }
+  .tally .sw{ width:7px; height:7px; border-radius:50%; }
+  .chev{ transition:transform .2s ease; font-size:10px; }
+  .chev.open{ transform:rotate(180deg); }
+  .indicators{
+    max-height:0; overflow:hidden; transition:max-height .25s ease;
+  }
+  .indicators.open{ max-height:600px; margin-top:10px; }
+  .ind-row{
+    display:flex; gap:10px; padding:9px 2px;
+    border-top:1px solid var(--panel-edge);
+  }
+  .ind-row:first-child{ border-top:none; }
+  .ind-dot{ width:9px; height:9px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .ind-dot.up{ background:var(--up); box-shadow:0 0 6px rgba(53,212,153,.5); }
+  .ind-dot.down{ background:var(--down); box-shadow:0 0 6px rgba(255,92,114,.5); }
+  .ind-dot.neutral{ background:var(--neutral); }
+  .ind-body .ind-name{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;
+  }
+  .ind-body .ind-text{ font-size:13px; line-height:1.4; }
+  .ind-note{
+    font-size:11px; color:var(--ink-dim); text-align:center;
+    margin-top:10px; line-height:1.5; padding:0 4px;
+  }
+
+  footer{
+    margin-top:22px; text-align:center;
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim);
+    line-height:1.6; padding:0 8px;
+  }
+  footer b{ color:var(--ink); }
+  .clock{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim); margin-top:2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="title">Mercado en vivo</div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Conectando…</span></div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <footer>
+    Datos de mercado de Binance. Actualización automática.<br>
+    Los indicadores muestran <b>el estado actual</b> del mercado, no una predicción. Ningún indicador garantiza resultados.<br>
+    Para tenerla como app: Safari → compartir → <b>Agregar a pantalla de inicio</b>.
+  </footer>
+</div>
+
+<script>
+const COINS = [
+  { sym: 'btcusdt', symbol: 'BTCUSDT', label: 'BTC', decimals: 2 },
+  { sym: 'ethusdt', symbol: 'ETHUSDT', label: 'ETH', decimals: 2 },
+  { sym: 'solusdt', symbol: 'SOLUSDT', label: 'SOL', decimals: 2 }
+];
+
+const state = {};
+const dot = document.getElementById('dot');
+const statusText = document.getElementById('statusText');
+const board = document.getElementById('board');
+
+function fmt(num, decimals) {
+  return Number(num).toLocaleString('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+}
+
+function buildRow(coin){
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.id = 'row-' + coin.sym;
+  row.innerHTML = `
+    <div class="row-top">
+      <div class="sym-block">
+        <span class="sym">${coin.label}</span>
+        <span class="pair">USDT · Spot</span>
+      </div>
+      <span class="chg" id="chg-${coin.sym}">--</span>
+    </div>
+    <div class="price" id="price-${coin.sym}">Cargando…</div>
+    <div class="range">
+      <div class="range-labels">
+        <span id="low-${coin.sym}">mín 24h --</span>
+        <span id="high-${coin.sym}">máx 24h --</span>
+      </div>
+      <div class="range-track">
+        <div class="range-fill"></div>
+        <div class="range-marker" id="marker-${coin.sym}" style="left:50%"></div>
+      </div>
+    </div>
+
+    <button class="ind-toggle" id="toggle-${coin.sym}">
+      <span class="tally" id="tally-${coin.sym}">Cargando indicadores…</span>
+      <span class="chev" id="chev-${coin.sym}">▾</span>
+    </button>
+    <div class="indicators" id="indicators-${coin.sym}"></div>
+  `;
+  board.appendChild(row);
+
+  row.querySelector('#toggle-' + coin.sym).addEventListener('click', () => {
+    const panel = row.querySelector('#indicators-' + coin.sym);
+    const chev = row.querySelector('#chev-' + coin.sym);
+    panel.classList.toggle('open');
+    chev.classList.toggle('open');
+  });
+}
+
+COINS.forEach(buildRow);
+
+function renderPrice(el, newVal, decimals, direction) {
+  const formatted = fmt(newVal, decimals);
+  el.innerHTML = '';
+  for (const ch of formatted) {
+    const span = document.createElement('span');
+    span.className = 'digit ' + (direction === 'up' ? 'pulse-up' : direction === 'down' ? 'pulse-down' : '');
+    span.textContent = ch;
+    el.appendChild(span);
+  }
+}
+
+function updateCoin(coin, t) {
+  const last = Number(t.c);
+  const pct = Number(t.P);
+  const high = Number(t.h);
+  const low = Number(t.l);
+  if (![last, pct, high, low].every(Number.isFinite)) return;
+
+  const previous = state[coin.sym]?.last;
+  const direction = previous == null ? null : last > previous ? 'up' : last < previous ? 'down' : null;
+  state[coin.sym] = { ...(state[coin.sym] || {}), last, pct, high, low };
+
+  const priceEl = document.getElementById('price-' + coin.sym);
+  const chgEl = document.getElementById('chg-' + coin.sym);
+  const rowEl = document.getElementById('row-' + coin.sym);
+  const lowEl = document.getElementById('low-' + coin.sym);
+  const highEl = document.getElementById('high-' + coin.sym);
+  const markerEl = document.getElementById('marker-' + coin.sym);
+
+  renderPrice(priceEl, last, coin.decimals, direction);
+  chgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+  chgEl.className = 'chg ' + (pct >= 0 ? 'up' : 'down');
+  lowEl.textContent = 'mín 24h ' + fmt(low, coin.decimals);
+  highEl.textContent = 'máx 24h ' + fmt(high, coin.decimals);
+
+  const span = Math.max(high - low, 0.00000001);
+  const posPct = Math.min(100, Math.max(0, ((last - low) / span) * 100));
+  markerEl.style.left = posPct + '%';
+
+  if (direction) {
+    rowEl.classList.remove('flash-up', 'flash-down');
+    void rowEl.offsetWidth;
+    rowEl.classList.add(direction === 'up' ? 'flash-up' : 'flash-down');
+    setTimeout(() => rowEl.classList.remove('flash-up', 'flash-down'), 500);
+  }
+}
+
+function setStatus(text, live = false) {
+  statusText.textContent = text;
+  dot.classList.toggle('live', live);
+}
+
+async function fetchJson(urls) {
+  let lastErr;
+  for (const url of urls) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return await res.json();
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+async function poll() {
+  try {
+    setStatus('Actualizando…');
+    const symbols = COINS.map(c => c.symbol);
+    const q = encodeURIComponent(JSON.stringify(symbols));
+    const data = await fetchJson([
+      'https://data-api.binance.vision/api/v3/ticker/24hr?symbols=' + q,
+      'https://api.binance.com/api/v3/ticker/24hr?symbols=' + q
+    ]);
+    const arr = Array.isArray(data) ? data : [data];
+    for (const item of arr) {
+      const coin = COINS.find(c => c.symbol === item.symbol);
+      if (coin) updateCoin(coin, item);
+    }
+    setStatus('En vivo', true);
+  } catch (e) {
+    console.error('Error de Binance:', e);
+    setStatus('Sin conexión');
+  }
+}
+
+let socket = null, socketTimer = null;
+function connectWebSocket() {
+  try {
+    const streams = COINS.map(c => c.sym + '@ticker').join('/');
+    socket = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+    socket.onopen = () => setStatus('En vivo', true);
+    socket.onmessage = event => {
+      try {
+        const packet = JSON.parse(event.data);
+        const item = packet.data;
+        if (!item || !item.s) return;
+        const coin = COINS.find(c => c.symbol === item.s);
+        if (coin) { updateCoin(coin, item); setStatus('En vivo', true); }
+      } catch (e) {}
+    };
+    socket.onerror = () => setStatus('Reintentando…');
+    socket.onclose = () => { clearTimeout(socketTimer); socketTimer = setTimeout(connectWebSocket, 5000); };
+  } catch (e) { console.error('WebSocket no disponible:', e); }
+}
+
+poll();
+setInterval(poll, 5000);
+connectWebSocket();
+
+function tickClock() {
+  const el = document.getElementById('clock');
+  el.textContent = new Date().toLocaleTimeString('es-ES', { hour12: false });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+/* ---------- INDICADORES ---------- */
+
+function sma(values, period) {
+  const arr = values.slice(-period);
+  return arr.reduce((a, b) => a + b, 0) / arr.length;
+}
+
+function emaSeries(values, period) {
+  const k = 2 / (period + 1);
+  let prev = values[0];
+  const out = [prev];
+  for (let i = 1; i < values.length; i++) {
+    prev = values[i] * k + prev * (1 - k);
+    out.push(prev);
+  }
+  return out;
+}
+
+function rsi(closes, period = 14) {
+  if (closes.length < period + 1) return null;
+  let gains = 0, losses = 0;
+  for (let i = 1; i <= period; i++) {
+    const diff = closes[i] - closes[i - 1];
+    if (diff >= 0) gains += diff; else losses -= diff;
+  }
+  let avgGain = gains / period, avgLoss = losses / period;
+  for (let i = period + 1; i < closes.length; i++) {
+    const diff = closes[i] - closes[i - 1];
+    const gain = diff > 0 ? diff : 0;
+    const loss = diff < 0 ? -diff : 0;
+    avgGain = (avgGain * (period - 1) + gain) / period;
+    avgLoss = (avgLoss * (period - 1) + loss) / period;
+  }
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+
+function macd(closes) {
+  const ema12 = emaSeries(closes, 12);
+  const ema26 = emaSeries(closes, 26);
+  const macdLine = closes.map((_, i) => ema12[i] - ema26[i]);
+  const signalLine = emaSeries(macdLine, 9);
+  const last = macdLine.length - 1;
+  return {
+    macd: macdLine[last],
+    signal: signalLine[last],
+    hist: macdLine[last] - signalLine[last]
+  };
+}
+
+function dotSpan(tag) {
+  return `<span class="ind-dot ${tag}"></span>`;
+}
+
+function buildIndicatorHTML(name, tag, text) {
+  return `<div class="ind-row">${dotSpan(tag)}<div class="ind-body"><div class="ind-name">${name}</div><div class="ind-text">${text}</div></div></div>`;
+}
+
+async function loadIndicators(coin) {
+  try {
+    const klines = await fetchJson([
+      `https://data-api.binance.vision/api/v3/klines?symbol=${coin.symbol}&interval=1h&limit=120`,
+      `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=1h&limit=120`
+    ]);
+    const closes = klines.map(k => parseFloat(k[4]));
+    const opens = klines.map(k => parseFloat(k[1]));
+    const volumes = klines.map(k => parseFloat(k[5]));
+    const lastClose = closes[closes.length - 1];
+    const lastOpen = opens[opens.length - 1];
+    const lastVol = volumes[volumes.length - 1];
+    const avgVol = sma(volumes.slice(0, -1), Math.min(20, volumes.length - 1));
+
+    const items = [];
+
+    // RSI
+    const r = rsi(closes, 14);
+    if (r != null) {
+      if (r >= 70) items.push({ tag: 'down', name: 'RSI (14)', text: `RSI en ${r.toFixed(0)} — zona de <b>sobrecompra</b>: subió mucho en poco tiempo, aumenta la chance de una pausa o corrección de corto plazo.` });
+      else if (r <= 30) items.push({ tag: 'up', name: 'RSI (14)', text: `RSI en ${r.toFixed(0)} — zona de <b>sobreventa</b>: bajó mucho en poco tiempo, aumenta la chance de un rebote de corto plazo.` });
+      else items.push({ tag: 'neutral', name: 'RSI (14)', text: `RSI en ${r.toFixed(0)} — zona <b>neutral</b>, sin señal de extremo en ningún sentido.` });
+    }
+
+    // MACD
+    const m = macd(closes);
+    const macdThreshold = lastClose * 0.0002;
+    if (m.hist > macdThreshold) items.push({ tag: 'up', name: 'MACD', text: `La línea MACD está <b>por encima</b> de la señal — el momentum de corto plazo es alcista.` });
+    else if (m.hist < -macdThreshold) items.push({ tag: 'down', name: 'MACD', text: `La línea MACD está <b>por debajo</b> de la señal — el momentum de corto plazo es bajista.` });
+    else items.push({ tag: 'neutral', name: 'MACD', text: `MACD y señal están casi pegados — momentum <b>débil</b>, sin dirección clara ahora mismo.` });
+
+    // Medias móviles
+    const ma7 = sma(closes, 7);
+    const ma25 = sma(closes, 25);
+    const maDiffPct = ((ma7 - ma25) / ma25) * 100;
+    if (maDiffPct > 0.05) items.push({ tag: 'up', name: 'Medias móviles', text: `La media de 7 velas está <b>por encima</b> de la de 25 — tendencia de corto plazo alcista.` });
+    else if (maDiffPct < -0.05) items.push({ tag: 'down', name: 'Medias móviles', text: `La media de 7 velas está <b>por debajo</b> de la de 25 — tendencia de corto plazo bajista.` });
+    else items.push({ tag: 'neutral', name: 'Medias móviles', text: `Las medias de 7 y 25 están casi <b>cruzadas</b> — el mercado está indeciso de corto plazo.` });
+
+    // Volumen
+    const volRatio = avgVol ? lastVol / avgVol : 1;
+    const lastCandleUp = lastClose > lastOpen;
+    if (volRatio > 1.2 && lastCandleUp) items.push({ tag: 'up', name: 'Volumen', text: `Volumen por encima del promedio acompañando una vela alcista — el movimiento tiene <b>respaldo</b>.` });
+    else if (volRatio > 1.2 && !lastCandleUp) items.push({ tag: 'down', name: 'Volumen', text: `Volumen por encima del promedio acompañando una vela bajista — la baja tiene <b>respaldo</b>.` });
+    else items.push({ tag: 'neutral', name: 'Volumen', text: `Volumen dentro de lo normal — no confirma con fuerza ninguna dirección.` });
+
+    const up = items.filter(i => i.tag === 'up').length;
+    const down = items.filter(i => i.tag === 'down').length;
+    const neutral = items.filter(i => i.tag === 'neutral').length;
+
+    document.getElementById('tally-' + coin.sym).innerHTML =
+      `<span><span class="sw" style="background:var(--up)"></span>${up} alcista${up === 1 ? '' : 's'}</span>` +
+      `<span><span class="sw" style="background:var(--down)"></span>${down} bajista${down === 1 ? '' : 's'}</span>` +
+      `<span><span class="sw" style="background:var(--neutral)"></span>${neutral} neutral${neutral === 1 ? '' : 'es'}</span>`;
+
+    document.getElementById('indicators-' + coin.sym).innerHTML =
+      items.map(i => buildIndicatorHTML(i.name, i.tag, i.text)).join('') +
+      `<div class="ind-note">Esto describe el estado <b>actual</b> del mercado, no predice qué va a pasar. Ningún indicador, combinado o solo, garantiza una ganancia.</div>`;
+  } catch (e) {
+    console.error('Error cargando indicadores de ' + coin.symbol, e);
+    const tallyEl = document.getElementById('tally-' + coin.sym);
+    if (tallyEl) tallyEl.textContent = 'No se pudieron cargar los indicadores';
+  }
+}
+
+function loadAllIndicators() {
+  COINS.forEach(loadIndicators);
+}
+loadAllIndicators();
+setInterval(loadAllIndicators, 60000);
+</script>
+</body>
+</html>
