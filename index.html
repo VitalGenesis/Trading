@@ -9,134 +9,95 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#14141a;
-    --panel:#1c1c24;
-    --panel-edge:#2a2a34;
-    --ink:#eae7df;
-    --ink-dim:#8b8a94;
-    --amber:#f2a93b;
-    --up:#35d499;
-    --down:#ff5c72;
-    --neutral:#7f8794;
+    --bg:#14141a; --panel:#1c1c24; --panel-edge:#2a2a34;
+    --ink:#eae7df; --ink-dim:#8b8a94; --amber:#f2a93b;
+    --up:#35d499; --down:#ff5c72; --neutral:#7f8794;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{
     margin:0; padding:0; height:100%;
     background: radial-gradient(ellipse at top, #1a1a22 0%, var(--bg) 60%);
-    color:var(--ink);
-    font-family:'Inter',sans-serif;
-    overscroll-behavior:none;
+    color:var(--ink); font-family:'Inter',sans-serif; overscroll-behavior:none;
   }
-  .wrap{
-    max-width:520px; margin:0 auto;
-    min-height:100vh;
-    display:flex; flex-direction:column;
-    padding:env(safe-area-inset-top,20px) 16px 24px;
-  }
-  header{
-    display:flex; justify-content:space-between; align-items:baseline;
-    padding:8px 4px 18px;
-    border-bottom:1px solid var(--panel-edge);
-  }
-  header .title{
-    font-family:'IBM Plex Mono',monospace;
-    font-weight:700; font-size:15px; letter-spacing:2px;
-    color:var(--amber); text-transform:uppercase;
-  }
-  header .status{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:11px; color:var(--ink-dim);
-    display:flex; align-items:center; gap:6px;
-  }
+  .wrap{ max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; padding:env(safe-area-inset-top,20px) 16px 24px; }
+  header{ display:flex; justify-content:space-between; align-items:baseline; padding:8px 4px 18px; border-bottom:1px solid var(--panel-edge); }
+  header .title{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; letter-spacing:2px; color:var(--amber); text-transform:uppercase; }
+  header .status{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim); display:flex; align-items:center; gap:6px; }
   .dot{width:6px; height:6px; border-radius:50%; background:var(--ink-dim); transition:background .3s;}
   .dot.live{background:var(--up); box-shadow:0 0 6px var(--up);}
   .clock{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim); margin-top:2px; }
 
-  .tf-bar{
-    display:flex; gap:6px; margin-top:16px;
-    background:var(--panel); border:1px solid var(--panel-edge);
-    border-radius:10px; padding:4px;
-  }
-  .tf-btn{
-    flex:1; text-align:center; padding:8px 0; border:none; background:none;
-    color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
-    border-radius:7px; cursor:pointer; transition:background .2s, color .2s;
-  }
+  .tf-bar{ display:flex; gap:6px; margin-top:16px; background:var(--panel); border:1px solid var(--panel-edge); border-radius:10px; padding:4px; }
+  .tf-btn{ flex:1; text-align:center; padding:8px 0; border:none; background:none; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; border-radius:7px; cursor:pointer; transition:background .2s, color .2s; }
   .tf-btn.active{ background:var(--amber); color:#1a1206; }
 
-  .board{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
-  .row{
-    background:linear-gradient(180deg, var(--panel), #18181f);
-    border:1px solid var(--panel-edge);
-    border-radius:10px;
-    padding:14px 16px;
-    position:relative;
-    overflow:hidden;
-    transition:border-color .25s;
+  .add-coin{ margin-top:10px; position:relative; }
+  .add-coin input{
+    width:100%; background:var(--panel); border:1px solid var(--panel-edge); border-radius:10px;
+    padding:11px 14px; color:var(--ink); font-family:'Inter',sans-serif; font-size:13.5px; outline:none;
   }
+  .add-coin input::placeholder{ color:var(--ink-dim); }
+  .add-coin input:focus{ border-color:var(--amber); }
+  .search-results{
+    position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:10;
+    background:#1f1f28; border:1px solid var(--panel-edge); border-radius:10px;
+    max-height:240px; overflow-y:auto; display:none;
+  }
+  .search-results.open{ display:block; }
+  .search-item{
+    padding:10px 14px; font-family:'IBM Plex Mono',monospace; font-size:13px;
+    display:flex; justify-content:space-between; cursor:pointer; border-top:1px solid var(--panel-edge);
+  }
+  .search-item:first-child{ border-top:none; }
+  .search-item:hover{ background:#262632; }
+  .search-item span{ color:var(--ink-dim); }
+  .search-empty{ padding:12px 14px; color:var(--ink-dim); font-size:12.5px; }
+
+  .board{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .row{ background:linear-gradient(180deg, var(--panel), #18181f); border:1px solid var(--panel-edge); border-radius:10px; padding:14px 16px; position:relative; overflow:hidden; transition:border-color .25s; }
   .row.flash-up{ border-color:var(--up); }
   .row.flash-down{ border-color:var(--down); }
   .row-top{ display:flex; justify-content:space-between; align-items:flex-start; }
-  .sym-block{ display:flex; align-items:baseline; gap:8px; }
+  .sym-block{ display:flex; align-items:center; gap:8px; }
   .sym{ font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; letter-spacing:1px; }
   .pair{ font-size:11px; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; }
-  .chg{
-    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px;
-    padding:3px 8px; border-radius:20px;
+  .remove-btn{
+    background:none; border:1px solid var(--panel-edge); color:var(--ink-dim); border-radius:6px;
+    width:20px; height:20px; line-height:1; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;
   }
+  .remove-btn:hover{ color:var(--down); border-color:var(--down); }
+  .chg{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; padding:3px 8px; border-radius:20px; }
   .chg.up{ color:var(--up); background:rgba(53,212,153,0.12); }
   .chg.down{ color:var(--down); background:rgba(255,92,114,0.12); }
-  .price{
-    font-family:'IBM Plex Mono',monospace; font-weight:600;
-    font-size:32px; margin-top:6px; letter-spacing:0.5px;
-    font-variant-numeric:tabular-nums;
-  }
+  .price{ font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:32px; margin-top:6px; letter-spacing:0.5px; font-variant-numeric:tabular-nums; }
   .digit{ display:inline-block; transition:transform .18s ease, color .18s ease; }
   .digit.pulse-up{ animation:flipUp .35s ease; color:var(--up); }
   .digit.pulse-down{ animation:flipDown .35s ease; color:var(--down); }
   @keyframes flipUp{ 0%{transform:translateY(40%); opacity:0.3;} 100%{transform:translateY(0); opacity:1;} }
   @keyframes flipDown{ 0%{transform:translateY(-40%); opacity:0.3;} 100%{transform:translateY(0); opacity:1;} }
   .range{ margin-top:12px; }
-  .range-labels{
-    display:flex; justify-content:space-between;
-    font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim);
-    margin-bottom:4px;
-  }
-  .range-track{
-    height:4px; border-radius:4px; background:#2a2a34; position:relative; overflow:hidden;
-  }
-  .range-fill{
-    position:absolute; top:0; bottom:0;
-    background:linear-gradient(90deg, var(--down), var(--amber), var(--up));
-    opacity:0.55; left:0; right:0;
-  }
-  .range-marker{
-    position:absolute; top:-2px; width:2px; height:8px; background:var(--ink);
-    border-radius:1px; transition:left .3s ease;
-  }
+  .range-labels{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-dim); margin-bottom:4px; }
+  .range-track{ height:4px; border-radius:4px; background:#2a2a34; position:relative; overflow:hidden; }
+  .range-fill{ position:absolute; top:0; bottom:0; background:linear-gradient(90deg, var(--down), var(--amber), var(--up)); opacity:0.55; left:0; right:0; }
+  .range-marker{ position:absolute; top:-2px; width:2px; height:8px; background:var(--ink); border-radius:1px; transition:left .3s ease; }
 
-  /* Indicadores */
-  .ind-toggle{
-    margin-top:14px; width:100%; background:none; border:1px solid var(--panel-edge);
-    border-radius:8px; padding:9px 12px; color:var(--ink-dim);
-    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
-    display:flex; justify-content:space-between; align-items:center;
-    cursor:pointer; gap:8px; flex-wrap:wrap;
-  }
+  .trend-badge{ margin-top:12px; display:flex; align-items:center; justify-content:space-between; padding:9px 12px; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; border:1px solid var(--panel-edge); flex-wrap:wrap; gap:4px; }
+  .trend-badge .arrow{ font-size:14px; }
+  .trend-badge.up{ background:rgba(53,212,153,0.10); border-color:rgba(53,212,153,0.35); color:var(--up); }
+  .trend-badge.down{ background:rgba(255,92,114,0.10); border-color:rgba(255,92,114,0.35); color:var(--down); }
+  .trend-badge.neutral{ background:rgba(127,135,148,0.10); border-color:rgba(127,135,148,0.35); color:var(--ink-dim); }
+  .trend-badge small{ font-family:'Inter',sans-serif; font-weight:400; color:var(--ink-dim); font-size:10.5px; }
+
+  .ind-toggle{ margin-top:14px; width:100%; background:none; border:1px solid var(--panel-edge); border-radius:8px; padding:9px 12px; color:var(--ink-dim); font-family:'IBM Plex Mono',monospace; font-size:11.5px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:8px; flex-wrap:wrap; }
   .tally{ display:flex; gap:8px; flex-wrap:wrap; }
   .tally span{ display:flex; align-items:center; gap:4px; }
   .tally .sw{ width:7px; height:7px; border-radius:50%; }
   .tf-label{ color:var(--amber); }
   .chev{ transition:transform .2s ease; font-size:10px; }
   .chev.open{ transform:rotate(180deg); }
-  .indicators{
-    max-height:0; overflow:hidden; transition:max-height .3s ease;
-  }
+  .indicators{ max-height:0; overflow:hidden; transition:max-height .3s ease; }
   .indicators.open{ max-height:1400px; margin-top:10px; }
-  .ind-row{
-    display:flex; gap:10px; padding:9px 2px;
-    border-top:1px solid var(--panel-edge);
-  }
+  .ind-row{ display:flex; gap:10px; padding:9px 2px; border-top:1px solid var(--panel-edge); }
   .ind-row:first-child{ border-top:none; }
   .ind-row.info{ opacity:0.85; }
   .ind-dot{ width:9px; height:9px; border-radius:50%; margin-top:4px; flex-shrink:0; }
@@ -144,21 +105,11 @@
   .ind-dot.down{ background:var(--down); box-shadow:0 0 6px rgba(255,92,114,.5); }
   .ind-dot.neutral{ background:var(--neutral); }
   .ind-dot.info{ background:var(--amber); }
-  .ind-body .ind-name{
-    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim);
-    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;
-  }
+  .ind-body .ind-name{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; }
   .ind-body .ind-text{ font-size:13px; line-height:1.4; }
-  .ind-note{
-    font-size:11px; color:var(--ink-dim); text-align:center;
-    margin-top:10px; line-height:1.5; padding:0 4px;
-  }
+  .ind-note{ font-size:11px; color:var(--ink-dim); text-align:center; margin-top:10px; line-height:1.5; padding:0 4px; }
 
-  footer{
-    margin-top:22px; text-align:center;
-    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim);
-    line-height:1.6; padding:0 8px;
-  }
+  footer{ margin-top:22px; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--ink-dim); line-height:1.6; padding:0 8px; }
   footer b{ color:var(--ink); }
 </style>
 </head>
@@ -180,6 +131,11 @@
     <button class="tf-btn" data-tf="1d">1D</button>
   </div>
 
+  <div class="add-coin">
+    <input id="coinSearch" type="text" placeholder="Agregar moneda (ej: DOGE, PEPE, ADA)…" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
   <div class="board" id="board"></div>
 
   <footer>
@@ -190,20 +146,27 @@
 </div>
 
 <script>
-const COINS = [
-  { sym: 'btcusdt', symbol: 'BTCUSDT', label: 'BTC', decimals: 2 },
-  { sym: 'ethusdt', symbol: 'ETHUSDT', label: 'ETH', decimals: 2 },
-  { sym: 'solusdt', symbol: 'SOLUSDT', label: 'SOL', decimals: 2 }
-];
-
 const TF_LABELS = { '5m':'5 min', '15m':'15 min', '1h':'1 hora', '4h':'4 horas', '1d':'1 día' };
 let currentInterval = '1h';
+let allSymbols = [];
+let watchlist = [
+  { sym: 'btcusdt', symbol: 'BTCUSDT', label: 'BTC' },
+  { sym: 'ethusdt', symbol: 'ETHUSDT', label: 'ETH' },
+  { sym: 'solusdt', symbol: 'SOLUSDT', label: 'SOL' }
+];
 
 const state = {};
 const dot = document.getElementById('dot');
 const statusText = document.getElementById('statusText');
 const board = document.getElementById('board');
 
+function autoDecimals(price){
+  const p = Math.abs(price);
+  if (p >= 100) return 2;
+  if (p >= 1) return 3;
+  if (p >= 0.01) return 5;
+  return 8;
+}
 function fmt(num, decimals) {
   return Number(num).toLocaleString('es-ES', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
@@ -216,7 +179,8 @@ function buildRow(coin){
     <div class="row-top">
       <div class="sym-block">
         <span class="sym">${coin.label}</span>
-        <span class="pair">USDT · Spot</span>
+        <span class="pair">USDT</span>
+        <button class="remove-btn" id="remove-${coin.sym}" title="Quitar">×</button>
       </div>
       <span class="chg" id="chg-${coin.sym}">--</span>
     </div>
@@ -232,6 +196,8 @@ function buildRow(coin){
       </div>
     </div>
 
+    <div class="trend-badge neutral" id="trend-${coin.sym}"><span>Calculando estado de tendencia…</span></div>
+
     <button class="ind-toggle" id="toggle-${coin.sym}">
       <span class="tally" id="tally-${coin.sym}">Cargando indicadores…</span>
       <span class="chev" id="chev-${coin.sym}">▾</span>
@@ -244,9 +210,77 @@ function buildRow(coin){
     row.querySelector('#indicators-' + coin.sym).classList.toggle('open');
     row.querySelector('#chev-' + coin.sym).classList.toggle('open');
   });
+  row.querySelector('#remove-' + coin.sym).addEventListener('click', () => removeCoin(coin.symbol));
 }
 
-COINS.forEach(buildRow);
+function renderBoard(){
+  board.innerHTML = '';
+  watchlist.forEach(buildRow);
+}
+renderBoard();
+
+/* ---------- Buscador de monedas ---------- */
+const searchInput = document.getElementById('coinSearch');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toUpperCase();
+  if (!q) { searchResults.classList.remove('open'); searchResults.innerHTML = ''; return; }
+  const already = new Set(watchlist.map(c => c.symbol));
+  const matches = allSymbols
+    .filter(s => s.replace('USDT', '').includes(q) && !already.has(s))
+    .slice(0, 8);
+  if (matches.length === 0) {
+    searchResults.innerHTML = allSymbols.length ? `<div class="search-empty">Sin resultados (o ya está en tu lista)</div>` : `<div class="search-empty">Cargando lista de monedas…</div>`;
+  } else {
+    searchResults.innerHTML = matches.map(s => `<div class="search-item" data-symbol="${s}">${s.replace('USDT', '')} <span>/USDT</span></div>`).join('');
+  }
+  searchResults.classList.add('open');
+});
+searchResults.addEventListener('click', (e) => {
+  const item = e.target.closest('.search-item');
+  if (!item || !item.dataset.symbol) return;
+  addCoin(item.dataset.symbol);
+  searchInput.value = '';
+  searchResults.innerHTML = '';
+  searchResults.classList.remove('open');
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.add-coin')) { searchResults.classList.remove('open'); }
+});
+
+function addCoin(symbolUpper){
+  if (watchlist.some(c => c.symbol === symbolUpper)) return;
+  const coin = { sym: symbolUpper.toLowerCase(), symbol: symbolUpper, label: symbolUpper.replace('USDT', '') };
+  watchlist.push(coin);
+  buildRow(coin);
+  updateWatchlistSubscription();
+  poll();
+  loadIndicators(coin);
+}
+
+function removeCoin(symbolUpper){
+  if (watchlist.length <= 1) return;
+  watchlist = watchlist.filter(c => c.symbol !== symbolUpper);
+  const row = document.getElementById('row-' + symbolUpper.toLowerCase());
+  if (row) row.remove();
+  delete state[symbolUpper.toLowerCase()];
+  updateWatchlistSubscription();
+}
+
+async function loadSymbolList(){
+  try {
+    const data = await fetchJson([
+      'https://data-api.binance.vision/api/v3/ticker/price',
+      'https://api.binance.com/api/v3/ticker/price'
+    ]);
+    allSymbols = data.map(d => d.symbol).filter(s => s.endsWith('USDT'));
+  } catch (e) {
+    console.error('No se pudo cargar la lista de símbolos', e);
+  }
+}
+
+/* ---------- Precio en vivo ---------- */
 
 document.getElementById('tfBar').addEventListener('click', (e) => {
   const btn = e.target.closest('.tf-btn');
@@ -254,7 +288,7 @@ document.getElementById('tfBar').addEventListener('click', (e) => {
   document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentInterval = btn.dataset.tf;
-  COINS.forEach(c => {
+  watchlist.forEach(c => {
     const t = document.getElementById('tally-' + c.sym);
     if (t) t.textContent = 'Cargando indicadores (' + TF_LABELS[currentInterval] + ')…';
   });
@@ -289,14 +323,16 @@ function updateCoin(coin, t) {
   const lowEl = document.getElementById('low-' + coin.sym);
   const highEl = document.getElementById('high-' + coin.sym);
   const markerEl = document.getElementById('marker-' + coin.sym);
+  if (!priceEl || !rowEl) return;
 
-  renderPrice(priceEl, last, coin.decimals, direction);
+  const decimals = autoDecimals(last);
+  renderPrice(priceEl, last, decimals, direction);
   chgEl.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
   chgEl.className = 'chg ' + (pct >= 0 ? 'up' : 'down');
-  lowEl.textContent = 'mín 24h ' + fmt(low, coin.decimals);
-  highEl.textContent = 'máx 24h ' + fmt(high, coin.decimals);
+  lowEl.textContent = 'mín 24h ' + fmt(low, decimals);
+  highEl.textContent = 'máx 24h ' + fmt(high, decimals);
 
-  const span = Math.max(high - low, 0.00000001);
+  const span = Math.max(high - low, 1e-9);
   const posPct = Math.min(100, Math.max(0, ((last - low) / span) * 100));
   markerEl.style.left = posPct + '%';
 
@@ -329,9 +365,10 @@ async function fetchJson(urls) {
 }
 
 async function poll() {
+  if (watchlist.length === 0) return;
   try {
     setStatus('Actualizando…');
-    const symbols = COINS.map(c => c.symbol);
+    const symbols = watchlist.map(c => c.symbol);
     const q = encodeURIComponent(JSON.stringify(symbols));
     const data = await fetchJson([
       'https://data-api.binance.vision/api/v3/ticker/24hr?symbols=' + q,
@@ -339,7 +376,7 @@ async function poll() {
     ]);
     const arr = Array.isArray(data) ? data : [data];
     for (const item of arr) {
-      const coin = COINS.find(c => c.symbol === item.symbol);
+      const coin = watchlist.find(c => c.symbol === item.symbol);
       if (coin) updateCoin(coin, item);
     }
     setStatus('En vivo', true);
@@ -349,10 +386,11 @@ async function poll() {
   }
 }
 
-let socket = null, socketTimer = null;
+let socket = null, socketTimer = null, manualClose = false;
 function connectWebSocket() {
   try {
-    const streams = COINS.map(c => c.sym + '@ticker').join('/');
+    if (watchlist.length === 0) return;
+    const streams = watchlist.map(c => c.sym + '@ticker').join('/');
     socket = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
     socket.onopen = () => setStatus('En vivo', true);
     socket.onmessage = event => {
@@ -360,15 +398,24 @@ function connectWebSocket() {
         const packet = JSON.parse(event.data);
         const item = packet.data;
         if (!item || !item.s) return;
-        const coin = COINS.find(c => c.symbol === item.s);
+        const coin = watchlist.find(c => c.symbol === item.s);
         if (coin) { updateCoin(coin, item); setStatus('En vivo', true); }
       } catch (e) {}
     };
     socket.onerror = () => setStatus('Reintentando…');
-    socket.onclose = () => { clearTimeout(socketTimer); socketTimer = setTimeout(connectWebSocket, 5000); };
+    socket.onclose = () => {
+      if (!manualClose) { clearTimeout(socketTimer); socketTimer = setTimeout(connectWebSocket, 5000); }
+      manualClose = false;
+    };
   } catch (e) { console.error('WebSocket no disponible:', e); }
 }
+function updateWatchlistSubscription(){
+  manualClose = true;
+  if (socket) socket.close();
+  connectWebSocket();
+}
 
+loadSymbolList();
 poll();
 setInterval(poll, 5000);
 connectWebSocket();
@@ -385,18 +432,13 @@ function sma(values, period) {
   const arr = values.slice(-period);
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 }
-
 function emaSeries(values, period) {
   const k = 2 / (period + 1);
   let prev = values[0];
   const out = [prev];
-  for (let i = 1; i < values.length; i++) {
-    prev = values[i] * k + prev * (1 - k);
-    out.push(prev);
-  }
+  for (let i = 1; i < values.length; i++) { prev = values[i] * k + prev * (1 - k); out.push(prev); }
   return out;
 }
-
 function rsi(closes, period = 14) {
   if (closes.length < period + 1) return null;
   let gains = 0, losses = 0;
@@ -407,25 +449,20 @@ function rsi(closes, period = 14) {
   let avgGain = gains / period, avgLoss = losses / period;
   for (let i = period + 1; i < closes.length; i++) {
     const diff = closes[i] - closes[i - 1];
-    const gain = diff > 0 ? diff : 0;
-    const loss = diff < 0 ? -diff : 0;
+    const gain = diff > 0 ? diff : 0, loss = diff < 0 ? -diff : 0;
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
   }
   if (avgLoss === 0) return 100;
-  const rs = avgGain / avgLoss;
-  return 100 - 100 / (1 + rs);
+  return 100 - 100 / (1 + avgGain / avgLoss);
 }
-
 function macd(closes) {
-  const ema12 = emaSeries(closes, 12);
-  const ema26 = emaSeries(closes, 26);
+  const ema12 = emaSeries(closes, 12), ema26 = emaSeries(closes, 26);
   const macdLine = closes.map((_, i) => ema12[i] - ema26[i]);
   const signalLine = emaSeries(macdLine, 9);
   const last = macdLine.length - 1;
   return { macd: macdLine[last], signal: signalLine[last], hist: macdLine[last] - signalLine[last] };
 }
-
 function bollinger(closes, period = 20, mult = 2) {
   const slice = closes.slice(-period);
   const mean = slice.reduce((a, b) => a + b, 0) / slice.length;
@@ -433,7 +470,6 @@ function bollinger(closes, period = 20, mult = 2) {
   const sd = Math.sqrt(variance);
   return { mid: mean, upper: mean + mult * sd, lower: mean - mult * sd, sd };
 }
-
 function stochasticK(highs, lows, closes, period = 14) {
   const h = highs.slice(-period), l = lows.slice(-period);
   const highestHigh = Math.max(...h), lowestLow = Math.min(...l);
@@ -441,44 +477,33 @@ function stochasticK(highs, lows, closes, period = 14) {
   if (highestHigh === lowestLow) return 50;
   return ((lastClose - lowestLow) / (highestHigh - lowestLow)) * 100;
 }
-
 function wilderSmooth(arr, period) {
   const out = [arr.slice(0, period).reduce((a, b) => a + b, 0)];
-  for (let i = period; i < arr.length; i++) {
-    out.push(out[out.length - 1] - out[out.length - 1] / period + arr[i]);
-  }
+  for (let i = period; i < arr.length; i++) out.push(out[out.length - 1] - out[out.length - 1] / period + arr[i]);
   return out;
 }
-
 function adxCalc(highs, lows, closes, period = 14) {
   const len = closes.length;
   const plusDM = [], minusDM = [], tr = [];
   for (let i = 1; i < len; i++) {
-    const upMove = highs[i] - highs[i - 1];
-    const downMove = lows[i - 1] - lows[i];
+    const upMove = highs[i] - highs[i - 1], downMove = lows[i - 1] - lows[i];
     plusDM.push(upMove > downMove && upMove > 0 ? upMove : 0);
     minusDM.push(downMove > upMove && downMove > 0 ? downMove : 0);
     tr.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1])));
   }
   if (tr.length < period * 2) return null;
-  const trS = wilderSmooth(tr, period);
-  const pdS = wilderSmooth(plusDM, period);
-  const mdS = wilderSmooth(minusDM, period);
+  const trS = wilderSmooth(tr, period), pdS = wilderSmooth(plusDM, period), mdS = wilderSmooth(minusDM, period);
   const plusDI = pdS.map((v, i) => (100 * v) / trS[i]);
   const minusDI = mdS.map((v, i) => (100 * v) / trS[i]);
   const dx = plusDI.map((v, i) => (100 * Math.abs(v - minusDI[i])) / (v + minusDI[i] || 1));
   const adx = sma(dx, Math.min(period, dx.length));
   return { adx, plusDI: plusDI[plusDI.length - 1], minusDI: minusDI[minusDI.length - 1] };
 }
-
 function atrCalc(highs, lows, closes, period = 14) {
   const trs = [];
-  for (let i = 1; i < closes.length; i++) {
-    trs.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1])));
-  }
+  for (let i = 1; i < closes.length; i++) trs.push(Math.max(highs[i] - lows[i], Math.abs(highs[i] - closes[i - 1]), Math.abs(lows[i] - closes[i - 1])));
   return sma(trs, period);
 }
-
 function dotSpan(tag) { return `<span class="ind-dot ${tag}"></span>`; }
 function buildIndicatorHTML(name, tag, text, info) {
   return `<div class="ind-row ${info ? 'info' : ''}">${dotSpan(info ? 'info' : tag)}<div class="ind-body"><div class="ind-name">${name}</div><div class="ind-text">${text}</div></div></div>`;
@@ -500,10 +525,10 @@ async function loadIndicators(coin) {
     const lastOpen = opens[opens.length - 1];
     const lastVol = volumes[volumes.length - 1];
     const avgVol = sma(volumes.slice(0, -1), Math.min(20, volumes.length - 1));
+    const decimals = autoDecimals(lastClose);
 
     const items = [];
 
-    // 1. RSI
     const r = rsi(closes, 14);
     if (r != null) {
       if (r >= 70) items.push({ tag: 'down', name: 'RSI (14)', text: `RSI en ${r.toFixed(0)} — zona de <b>sobrecompra</b>: subió mucho en poco tiempo, aumenta la chance de pausa o corrección.` });
@@ -511,27 +536,23 @@ async function loadIndicators(coin) {
       else items.push({ tag: 'neutral', name: 'RSI (14)', text: `RSI en ${r.toFixed(0)} — zona <b>neutral</b>, sin señal de extremo.` });
     }
 
-    // 2. Estocástico
     const k = stochasticK(highs, lows, closes, 14);
     if (k >= 80) items.push({ tag: 'down', name: 'Estocástico (14)', text: `En ${k.toFixed(0)} — <b>sobrecompra</b>: el precio cerró cerca de su máximo reciente.` });
     else if (k <= 20) items.push({ tag: 'up', name: 'Estocástico (14)', text: `En ${k.toFixed(0)} — <b>sobreventa</b>: el precio cerró cerca de su mínimo reciente.` });
     else items.push({ tag: 'neutral', name: 'Estocástico (14)', text: `En ${k.toFixed(0)} — zona intermedia, sin extremo.` });
 
-    // 3. MACD
     const m = macd(closes);
     const macdThreshold = lastClose * 0.0002;
     if (m.hist > macdThreshold) items.push({ tag: 'up', name: 'MACD', text: `Línea MACD <b>por encima</b> de la señal — momentum de corto plazo alcista.` });
     else if (m.hist < -macdThreshold) items.push({ tag: 'down', name: 'MACD', text: `Línea MACD <b>por debajo</b> de la señal — momentum de corto plazo bajista.` });
     else items.push({ tag: 'neutral', name: 'MACD', text: `MACD y señal casi pegados — momentum <b>débil</b>, sin dirección clara.` });
 
-    // 4. Medias móviles corto plazo
     const ma7 = sma(closes, 7), ma25 = sma(closes, 25);
     const maDiffPct = ((ma7 - ma25) / ma25) * 100;
     if (maDiffPct > 0.05) items.push({ tag: 'up', name: 'Medias móviles (7/25)', text: `Media corta <b>por encima</b> de la larga — tendencia de corto plazo alcista.` });
     else if (maDiffPct < -0.05) items.push({ tag: 'down', name: 'Medias móviles (7/25)', text: `Media corta <b>por debajo</b> de la larga — tendencia de corto plazo bajista.` });
     else items.push({ tag: 'neutral', name: 'Medias móviles (7/25)', text: `Medias casi <b>cruzadas</b> — mercado indeciso de corto plazo.` });
 
-    // 5. Tendencia de fondo (precio vs media larga)
     const maLongPeriod = Math.min(99, Math.max(20, closes.length - 5));
     const maLong = sma(closes, maLongPeriod);
     const vsLongPct = ((lastClose - maLong) / maLong) * 100;
@@ -539,14 +560,12 @@ async function loadIndicators(coin) {
     else if (vsLongPct < -0.1) items.push({ tag: 'down', name: `Tendencia de fondo (SMA${maLongPeriod})`, text: `Precio <b>por debajo</b> de la media larga — contexto general bajista en esta temporalidad.` });
     else items.push({ tag: 'neutral', name: `Tendencia de fondo (SMA${maLongPeriod})`, text: `Precio pegado a la media larga — sin tendencia de fondo clara.` });
 
-    // 6. Bandas de Bollinger
     const bb = bollinger(closes, 20, 2);
     const bandWidthPct = ((bb.upper - bb.lower) / bb.mid) * 100;
     if (lastClose >= bb.upper) items.push({ tag: 'down', name: 'Bandas de Bollinger', text: `Precio tocando la banda <b>superior</b> — extendido respecto a su promedio reciente, ojo con una posible pausa.` });
     else if (lastClose <= bb.lower) items.push({ tag: 'up', name: 'Bandas de Bollinger', text: `Precio tocando la banda <b>inferior</b> — extendido a la baja respecto a su promedio reciente.` });
     else items.push({ tag: 'neutral', name: 'Bandas de Bollinger', text: `Precio dentro de las bandas (ancho ${bandWidthPct.toFixed(1)}%) — volatilidad ${bandWidthPct < 3 ? 'baja, mercado comprimido' : 'normal'}.` });
 
-    // 7. ADX — fuerza de tendencia
     const adxRes = adxCalc(highs, lows, closes, 14);
     if (adxRes) {
       if (adxRes.adx >= 25) {
@@ -555,7 +574,6 @@ async function loadIndicators(coin) {
       } else items.push({ tag: 'neutral', name: 'ADX — fuerza de tendencia', text: `ADX en ${adxRes.adx.toFixed(0)} — mercado <b>sin tendencia clara</b>, más bien lateral.` });
     }
 
-    // 8. Volumen
     const volRatio = avgVol ? lastVol / avgVol : 1;
     const lastCandleUp = lastClose > lastOpen;
     if (volRatio > 1.2 && lastCandleUp) items.push({ tag: 'up', name: 'Volumen', text: `Por encima del promedio acompañando una vela alcista — el movimiento tiene <b>respaldo</b>.` });
@@ -566,21 +584,39 @@ async function loadIndicators(coin) {
     const down = items.filter(i => i.tag === 'down').length;
     const neutral = items.filter(i => i.tag === 'neutral').length;
 
-    // 9. ATR — informativo, no cuenta en el tally
+    let trendState = 'media';
+    if (adxRes && adxRes.adx < 18) trendState = 'media';
+    else if (up - down >= 2) trendState = 'alcista';
+    else if (down - up >= 2) trendState = 'bajista';
+
+    const trendEl = document.getElementById('trend-' + coin.sym);
+    if (trendEl) {
+      trendEl.className = 'trend-badge ' + (trendState === 'alcista' ? 'up' : trendState === 'bajista' ? 'down' : 'neutral');
+      const trendArrow = trendState === 'alcista' ? '↑' : trendState === 'bajista' ? '↓' : '→';
+      const trendLabel = trendState === 'alcista' ? 'Tendencia alcista' : trendState === 'bajista' ? 'Tendencia bajista' : 'Tendencia media / lateral';
+      trendEl.innerHTML = `<span class="arrow">${trendArrow}</span>&nbsp; ${trendLabel} &nbsp;<small>(${up} alcistas, ${down} bajistas, ${neutral} neutrales en ${TF_LABELS[currentInterval]} — solo con fines de estudio)</small>`;
+    }
+
     const atrVal = atrCalc(highs, lows, closes, 14);
     const atrPct = (atrVal / lastClose) * 100;
-    const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, coin.decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.`, info: true };
+    const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.` };
 
-    document.getElementById('tally-' + coin.sym).innerHTML =
-      `<span class="tf-label">${TF_LABELS[currentInterval]}</span>` +
-      `<span><span class="sw" style="background:var(--up)"></span>${up} alcista${up === 1 ? '' : 's'}</span>` +
-      `<span><span class="sw" style="background:var(--down)"></span>${down} bajista${down === 1 ? '' : 's'}</span>` +
-      `<span><span class="sw" style="background:var(--neutral)"></span>${neutral} neutral${neutral === 1 ? '' : 'es'}</span>`;
+    const tallyEl = document.getElementById('tally-' + coin.sym);
+    if (tallyEl) {
+      tallyEl.innerHTML =
+        `<span class="tf-label">${TF_LABELS[currentInterval]}</span>` +
+        `<span><span class="sw" style="background:var(--up)"></span>${up} alcista${up === 1 ? '' : 's'}</span>` +
+        `<span><span class="sw" style="background:var(--down)"></span>${down} bajista${down === 1 ? '' : 's'}</span>` +
+        `<span><span class="sw" style="background:var(--neutral)"></span>${neutral} neutral${neutral === 1 ? '' : 'es'}</span>`;
+    }
 
-    document.getElementById('indicators-' + coin.sym).innerHTML =
-      items.map(i => buildIndicatorHTML(i.name, i.tag, i.text)).join('') +
-      buildIndicatorHTML(infoItem.name, null, infoItem.text, true) +
-      `<div class="ind-note">Esto describe el estado <b>actual</b> del mercado en velas de ${TF_LABELS[currentInterval]}, no predice qué va a pasar después. Ningún indicador, combinado o solo, garantiza una ganancia.</div>`;
+    const indEl = document.getElementById('indicators-' + coin.sym);
+    if (indEl) {
+      indEl.innerHTML =
+        items.map(i => buildIndicatorHTML(i.name, i.tag, i.text)).join('') +
+        buildIndicatorHTML(infoItem.name, null, infoItem.text, true) +
+        `<div class="ind-note">Esto describe el estado <b>actual</b> del mercado en velas de ${TF_LABELS[currentInterval]}, no predice qué va a pasar después. Ningún indicador, combinado o solo, garantiza una ganancia.</div>`;
+    }
   } catch (e) {
     console.error('Error cargando indicadores de ' + coin.symbol, e);
     const tallyEl = document.getElementById('tally-' + coin.sym);
@@ -588,7 +624,7 @@ async function loadIndicators(coin) {
   }
 }
 
-function loadAllIndicators() { COINS.forEach(loadIndicators); }
+function loadAllIndicators() { watchlist.forEach(loadIndicators); }
 loadAllIndicators();
 setInterval(loadAllIndicators, 60000);
 </script>
