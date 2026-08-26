@@ -267,6 +267,140 @@ const dot = document.getElementById('dot');
 const statusText = document.getElementById('statusText');
 const board = document.getElementById('board');
 
+/* ---------- MODAL: GRÁFICO DE POSICIÓN + CIERRE MANUAL ---------- */
+/* Este bloque va temprano en el script a propósito: define funciones y el
+   const posModal ANTES de que renderDemo() se ejecute por primera vez más abajo.
+   Si se declara más tarde, renderDemo() intenta usar posModal antes de que
+   exista (TDZ) y tira un ReferenceError que frena el resto del script. */
+let modalPositionId = null;
+let activeChart = null, activeSeries = null, activeCurrentPriceLine = null;
+const posModal = document.getElementById('posModal');
+
+function findPosition(id){ return demo.positions.find(x => String(x.id) === String(id)); }
+
+function closePositionManually(id){
+  const p = findPosition(id);
+  if (!p) return;
+  const st = state[p.sym];
+  const price = st?.last ?? p.entry;
+  if (!confirm(`¿Cerrar ${p.symbol} ${p.side} al precio actual (${fmt(price, autoDecimals(price))})?`)) return;
+  closeDemoPosition(p, price, 'MANUAL');
+  saveDemo();
+  closeModal();
+}
+
+function updateModalStats(){
+  if (!modalPositionId || !posModal.classList.contains('open')) return;
+  const p = findPosition(modalPositionId);
+  if (!p) { closeModal(); return; }
+  const st = state[p.sym];
+  const current = st?.last ?? p.entry;
+  const diff = p.side === 'LONG' ? current - p.entry : p.entry - current;
+  const posPnl = diff * p.qty;
+  document.getElementById('mEntry').textContent = fmt(p.entry, autoDecimals(p.entry));
+  document.getElementById('mCurrent').textContent = fmt(current, autoDecimals(current));
+  document.getElementById('mSl').textContent = fmt(p.sl, autoDecimals(p.sl));
+  document.getElementById('mTp').textContent = fmt(p.tp2, autoDecimals(p.tp2));
+  document.getElementById('mQty').textContent = p.qty.toFixed(6);
+  const pnlEl = document.getElementById('mPnl');
+  pnlEl.textContent = (posPnl >= 0 ? '+' : '') + money(posPnl);
+  pnlEl.style.color = posPnl >= 0 ? 'var(--up)' : 'var(--down)';
+  if (activeCurrentPriceLine) {
+    activeCurrentPriceLine.applyOptions({ price: current });
+  }
+}
+
+function closeModal(){
+  posModal.classList.remove('open');
+  modalPositionId = null;
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+}
+
+async function openPositionChart(id){
+  const p = findPosition(id);
+  if (!p) return;
+  modalPositionId = id;
+  posModal.classList.add('open');
+  document.getElementById('modalTitle').innerHTML = `${p.symbol} <span class="side-tag ${p.side}">${p.side}</span>`;
+  document.getElementById('chartLoading').style.display = 'flex';
+  document.getElementById('chartLoading').textContent = 'Cargando gráfico…';
+  updateModalStats();
+
+  const container = document.getElementById('chartContainer');
+  container.innerHTML = '';
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+
+  if (typeof LightweightCharts === 'undefined') {
+    document.getElementById('chartLoading').textContent = 'No se pudo cargar la librería de gráficos (revisá tu conexión).';
+    return;
+  }
+
+  try {
+    const limit = 150;
+    const klines = await fetchJson([
+      `https://data-api.binance.vision/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`,
+      `https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`
+    ]);
+    if (modalPositionId !== id) return; // el usuario cerró el modal mientras cargaba
+
+    const candles = klines.map(k => ({
+      time: Math.floor(k[0] / 1000),
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4])
+    }));
+
+    const chart = LightweightCharts.createChart(container, {
+      width: container.clientWidth,
+      height: 300,
+      layout: { background: { color: 'transparent' }, textColor: '#8b8a94', fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+      grid: { vertLines: { color: '#2a2a34' }, horzLines: { color: '#2a2a34' } },
+      rightPriceScale: { borderColor: '#2a2a34' },
+      timeScale: { borderColor: '#2a2a34', timeVisible: true, secondsVisible: false },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    const series = chart.addCandlestickSeries({
+      upColor: '#35d499', downColor: '#ff5c72', borderVisible: false,
+      wickUpColor: '#35d499', wickDownColor: '#ff5c72'
+    });
+    series.setData(candles);
+
+    series.createPriceLine({ price: p.entry, color: '#f2a93b', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'Entrada' });
+    series.createPriceLine({ price: p.sl, color: '#ff5c72', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'SL' });
+    if (p.tp1) series.createPriceLine({ price: p.tp1, color: '#35d499', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: 'TP1' });
+    series.createPriceLine({ price: p.tp2, color: '#35d499', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'TP2' });
+
+    const liveCurrent = state[p.sym]?.last ?? candles[candles.length - 1].close;
+    activeCurrentPriceLine = series.createPriceLine({ price: liveCurrent, color: '#eae7df', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Solid, axisLabelVisible: true, title: 'Actual' });
+
+    chart.timeScale().fitContent();
+    activeChart = chart;
+    activeSeries = series;
+    document.getElementById('chartLoading').style.display = 'none';
+
+    const resizeObs = new ResizeObserver(() => {
+      if (activeChart) activeChart.applyOptions({ width: container.clientWidth });
+    });
+    resizeObs.observe(container);
+  } catch (e) {
+    console.error('Error cargando gráfico:', e);
+    document.getElementById('chartLoading').textContent = 'No se pudo cargar el gráfico. Probá de nuevo.';
+  }
+}
+
+document.getElementById('demoPositions').addEventListener('click', (e) => {
+  const chartBtn = e.target.closest('[data-chart]');
+  if (chartBtn) { openPositionChart(chartBtn.dataset.chart); return; }
+  const closeBtn = e.target.closest('[data-close]');
+  if (closeBtn) { closePositionManually(closeBtn.dataset.close); return; }
+});
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+posModal.addEventListener('click', (e) => { if (e.target === posModal) closeModal(); });
+document.getElementById('modalCloseTradeBtn').addEventListener('click', () => {
+  if (modalPositionId) closePositionManually(modalPositionId);
+});
+
 function autoDecimals(price){
   const p = Math.abs(price);
   if (p >= 100) return 2;
@@ -849,131 +983,6 @@ function renderDemo(){
   document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`<div class="history-row">${h.symbol} ${h.side} · ${h.result>=0?'+':''}${money(h.result)} · ${new Date(h.time).toLocaleString('es-AR')}</div>`).join('');
   if (typeof updateModalStats === 'function') updateModalStats();
 }
-
-/* ---------- MODAL: GRÁFICO DE POSICIÓN + CIERRE MANUAL ---------- */
-let modalPositionId = null;
-let activeChart = null, activeSeries = null, activeCurrentPriceLine = null;
-const posModal = document.getElementById('posModal');
-
-function findPosition(id){ return demo.positions.find(x => String(x.id) === String(id)); }
-
-function closePositionManually(id){
-  const p = findPosition(id);
-  if (!p) return;
-  const st = state[p.sym];
-  const price = st?.last ?? p.entry;
-  if (!confirm(`¿Cerrar ${p.symbol} ${p.side} al precio actual (${fmt(price, autoDecimals(price))})?`)) return;
-  closeDemoPosition(p, price, 'MANUAL');
-  saveDemo();
-  closeModal();
-}
-
-function updateModalStats(){
-  if (!modalPositionId || !posModal.classList.contains('open')) return;
-  const p = findPosition(modalPositionId);
-  if (!p) { closeModal(); return; }
-  const st = state[p.sym];
-  const current = st?.last ?? p.entry;
-  const diff = p.side === 'LONG' ? current - p.entry : p.entry - current;
-  const posPnl = diff * p.qty;
-  document.getElementById('mEntry').textContent = fmt(p.entry, autoDecimals(p.entry));
-  document.getElementById('mCurrent').textContent = fmt(current, autoDecimals(current));
-  document.getElementById('mSl').textContent = fmt(p.sl, autoDecimals(p.sl));
-  document.getElementById('mTp').textContent = fmt(p.tp2, autoDecimals(p.tp2));
-  document.getElementById('mQty').textContent = p.qty.toFixed(6);
-  const pnlEl = document.getElementById('mPnl');
-  pnlEl.textContent = (posPnl >= 0 ? '+' : '') + money(posPnl);
-  pnlEl.style.color = posPnl >= 0 ? 'var(--up)' : 'var(--down)';
-  if (activeCurrentPriceLine) {
-    activeCurrentPriceLine.applyOptions({ price: current });
-  }
-}
-
-function closeModal(){
-  posModal.classList.remove('open');
-  modalPositionId = null;
-  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
-}
-
-async function openPositionChart(id){
-  const p = findPosition(id);
-  if (!p) return;
-  modalPositionId = id;
-  posModal.classList.add('open');
-  document.getElementById('modalTitle').innerHTML = `${p.symbol} <span class="side-tag ${p.side}">${p.side}</span>`;
-  document.getElementById('chartLoading').style.display = 'flex';
-  document.getElementById('chartLoading').textContent = 'Cargando gráfico…';
-  updateModalStats();
-
-  const container = document.getElementById('chartContainer');
-  container.innerHTML = '';
-  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
-
-  try {
-    const limit = 150;
-    const klines = await fetchJson([
-      `https://data-api.binance.vision/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`,
-      `https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`
-    ]);
-    if (modalPositionId !== id) return; // el usuario cerró el modal mientras cargaba
-
-    const candles = klines.map(k => ({
-      time: Math.floor(k[0] / 1000),
-      open: parseFloat(k[1]),
-      high: parseFloat(k[2]),
-      low: parseFloat(k[3]),
-      close: parseFloat(k[4])
-    }));
-
-    const chart = LightweightCharts.createChart(container, {
-      width: container.clientWidth,
-      height: 300,
-      layout: { background: { color: 'transparent' }, textColor: '#8b8a94', fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
-      grid: { vertLines: { color: '#2a2a34' }, horzLines: { color: '#2a2a34' } },
-      rightPriceScale: { borderColor: '#2a2a34' },
-      timeScale: { borderColor: '#2a2a34', timeVisible: true, secondsVisible: false },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
-    });
-    const series = chart.addCandlestickSeries({
-      upColor: '#35d499', downColor: '#ff5c72', borderVisible: false,
-      wickUpColor: '#35d499', wickDownColor: '#ff5c72'
-    });
-    series.setData(candles);
-
-    series.createPriceLine({ price: p.entry, color: '#f2a93b', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'Entrada' });
-    series.createPriceLine({ price: p.sl, color: '#ff5c72', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'SL' });
-    if (p.tp1) series.createPriceLine({ price: p.tp1, color: '#35d499', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: 'TP1' });
-    series.createPriceLine({ price: p.tp2, color: '#35d499', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'TP2' });
-
-    const liveCurrent = state[p.sym]?.last ?? candles[candles.length - 1].close;
-    activeCurrentPriceLine = series.createPriceLine({ price: liveCurrent, color: '#eae7df', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Solid, axisLabelVisible: true, title: 'Actual' });
-
-    chart.timeScale().fitContent();
-    activeChart = chart;
-    activeSeries = series;
-    document.getElementById('chartLoading').style.display = 'none';
-
-    const resizeObs = new ResizeObserver(() => {
-      if (activeChart) activeChart.applyOptions({ width: container.clientWidth });
-    });
-    resizeObs.observe(container);
-  } catch (e) {
-    console.error('Error cargando gráfico:', e);
-    document.getElementById('chartLoading').textContent = 'No se pudo cargar el gráfico. Probá de nuevo.';
-  }
-}
-
-document.getElementById('demoPositions').addEventListener('click', (e) => {
-  const chartBtn = e.target.closest('[data-chart]');
-  if (chartBtn) { openPositionChart(chartBtn.dataset.chart); return; }
-  const closeBtn = e.target.closest('[data-close]');
-  if (closeBtn) { closePositionManually(closeBtn.dataset.close); return; }
-});
-document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
-posModal.addEventListener('click', (e) => { if (e.target === posModal) closeModal(); });
-document.getElementById('modalCloseTradeBtn').addEventListener('click', () => {
-  if (modalPositionId) closePositionManually(modalPositionId);
-});
 
 function resetDemo(){
   demo.balance=100; demo.start=100; demo.positions=[]; demo.history=[]; saveDemo();
