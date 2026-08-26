@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   :root{
     --bg:#14141a; --panel:#1c1c24; --panel-edge:#2a2a34;
@@ -127,6 +128,34 @@
   .demo-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
   .demo-controls label{font-size:10px;color:var(--ink-dim)}.demo-controls input{width:100%;margin-top:4px;background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;color:var(--ink);padding:7px}
   .demo-positions,.demo-history{margin-top:10px}.demo-pos,.history-row{padding:8px;border-top:1px solid var(--panel-edge);font-size:10.5px}
+  .demo-pos{display:flex;flex-direction:column;gap:6px}
+  .demo-pos-info{line-height:1.6}
+  .demo-pos-actions{display:flex;gap:6px}
+  .pos-btn{flex:1;border:1px solid var(--panel-edge);background:#18181f;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:7px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+  .pos-btn:hover{border-color:var(--amber);color:var(--amber)}
+  .pos-btn.close-btn:hover{border-color:var(--down);color:var(--down)}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,10,13,0.72);backdrop-filter:blur(2px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+  .modal-overlay.open{display:flex}
+  .modal-box{width:100%;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--panel);border:1px solid var(--panel-edge);border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,16px) + 16px);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .modal-title{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;letter-spacing:0.5px}
+  .modal-title .side-tag{font-size:11px;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .modal-title .side-tag.LONG{color:var(--up);background:rgba(53,212,153,0.14)}
+  .modal-title .side-tag.SHORT{color:var(--down);background:rgba(255,92,114,0.14)}
+  .modal-close{background:none;border:1px solid var(--panel-edge);color:var(--ink-dim);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .modal-close:hover{color:var(--ink)}
+  .chart-wrap{position:relative;background:#18181f;border:1px solid var(--panel-edge);border-radius:10px;overflow:hidden;}
+  .chart-container{width:100%;height:300px;}
+  .chart-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .chart-legend{display:flex;gap:10px;flex-wrap:wrap;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-dim);border-top:1px solid var(--panel-edge)}
+  .chart-legend span{display:flex;align-items:center;gap:4px}
+  .chart-legend i{width:12px;height:2px;display:inline-block}
+  .modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+  .modal-stats div{background:#18181f;border:1px solid var(--panel-edge);border-radius:7px;padding:8px 10px}
+  .modal-stats span{display:block;color:var(--ink-dim);font-size:9.5px}
+  .modal-stats b{font-family:'IBM Plex Mono',monospace;font-size:13px}
+  .modal-actions{margin-top:12px}
   .setup-card{margin-top:12px;padding:11px 12px;border:1px solid var(--panel-edge);border-radius:8px;background:#18181f}
   .setup-card.up{border-color:rgba(53,212,153,.45)}.setup-card.down{border-color:rgba(255,92,114,.45)}.setup-card.neutral{border-color:rgba(127,135,148,.4)}
   .setup-top{display:flex;justify-content:space-between}.setup-score{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-dim)}
@@ -187,6 +216,34 @@
   </section>
 
   <div class="board" id="board"></div>
+
+  <div class="modal-overlay" id="posModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">--</div>
+        <button class="modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-container" id="chartContainer"></div>
+        <div class="chart-loading" id="chartLoading">Cargando gráfico…</div>
+      </div>
+      <div class="chart-legend">
+        <span><i style="background:var(--amber)"></i> Entrada</span>
+        <span><i style="background:var(--down)"></i> Stop Loss</span>
+        <span><i style="background:var(--up);opacity:.6"></i> TP1</span>
+        <span><i style="background:var(--up)"></i> TP2</span>
+      </div>
+      <div class="modal-stats">
+        <div><span>Entrada</span><b id="mEntry">--</b></div>
+        <div><span>Actual</span><b id="mCurrent">--</b></div>
+        <div><span>SL</span><b id="mSl" style="color:var(--down)">--</b></div>
+        <div><span>TP2</span><b id="mTp" style="color:var(--up)">--</b></div>
+        <div><span>Cantidad</span><b id="mQty">--</b></div>
+        <div><span>PnL</span><b id="mPnl">--</b></div>
+      </div>
+      <button class="demo-trade-btn pos-btn close-btn" id="modalCloseTradeBtn" style="margin-top:12px;border:1px solid var(--panel-edge);background:none;color:var(--down)">✕ Cerrar posición al precio actual</button>
+    </div>
+  </div>
 
   <footer>
     Datos de mercado de Binance. Precio en vivo; indicadores según la temporalidad elegida.<br>
@@ -774,17 +831,149 @@ function renderDemo(){
         const posPnl=diff*p.qty;
         const cls=posPnl>=0?'var(--up)':'var(--down)';
         return `<div class="demo-pos">
-          <b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))}
-          · actual ${fmt(current,autoDecimals(current))}
-          · SL ${fmt(p.sl,autoDecimals(p.sl))}
-          · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
-          · qty ${p.qty.toFixed(6)}
-          · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
+          <div class="demo-pos-info">
+            <b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))}
+            · actual ${fmt(current,autoDecimals(current))}
+            · SL ${fmt(p.sl,autoDecimals(p.sl))}
+            · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
+            · qty ${p.qty.toFixed(6)}
+            · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
+          </div>
+          <div class="demo-pos-actions">
+            <button class="pos-btn" data-chart="${p.id}">📈 Ver gráfico</button>
+            <button class="pos-btn close-btn" data-close="${p.id}">✕ Cerrar</button>
+          </div>
         </div>`;
       }).join('')
     : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>';
   document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`<div class="history-row">${h.symbol} ${h.side} · ${h.result>=0?'+':''}${money(h.result)} · ${new Date(h.time).toLocaleString('es-AR')}</div>`).join('');
+  if (typeof updateModalStats === 'function') updateModalStats();
 }
+
+/* ---------- MODAL: GRÁFICO DE POSICIÓN + CIERRE MANUAL ---------- */
+let modalPositionId = null;
+let activeChart = null, activeSeries = null, activeCurrentPriceLine = null;
+const posModal = document.getElementById('posModal');
+
+function findPosition(id){ return demo.positions.find(x => String(x.id) === String(id)); }
+
+function closePositionManually(id){
+  const p = findPosition(id);
+  if (!p) return;
+  const st = state[p.sym];
+  const price = st?.last ?? p.entry;
+  if (!confirm(`¿Cerrar ${p.symbol} ${p.side} al precio actual (${fmt(price, autoDecimals(price))})?`)) return;
+  closeDemoPosition(p, price, 'MANUAL');
+  saveDemo();
+  closeModal();
+}
+
+function updateModalStats(){
+  if (!modalPositionId || !posModal.classList.contains('open')) return;
+  const p = findPosition(modalPositionId);
+  if (!p) { closeModal(); return; }
+  const st = state[p.sym];
+  const current = st?.last ?? p.entry;
+  const diff = p.side === 'LONG' ? current - p.entry : p.entry - current;
+  const posPnl = diff * p.qty;
+  document.getElementById('mEntry').textContent = fmt(p.entry, autoDecimals(p.entry));
+  document.getElementById('mCurrent').textContent = fmt(current, autoDecimals(current));
+  document.getElementById('mSl').textContent = fmt(p.sl, autoDecimals(p.sl));
+  document.getElementById('mTp').textContent = fmt(p.tp2, autoDecimals(p.tp2));
+  document.getElementById('mQty').textContent = p.qty.toFixed(6);
+  const pnlEl = document.getElementById('mPnl');
+  pnlEl.textContent = (posPnl >= 0 ? '+' : '') + money(posPnl);
+  pnlEl.style.color = posPnl >= 0 ? 'var(--up)' : 'var(--down)';
+  if (activeCurrentPriceLine) {
+    activeCurrentPriceLine.applyOptions({ price: current });
+  }
+}
+
+function closeModal(){
+  posModal.classList.remove('open');
+  modalPositionId = null;
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+}
+
+async function openPositionChart(id){
+  const p = findPosition(id);
+  if (!p) return;
+  modalPositionId = id;
+  posModal.classList.add('open');
+  document.getElementById('modalTitle').innerHTML = `${p.symbol} <span class="side-tag ${p.side}">${p.side}</span>`;
+  document.getElementById('chartLoading').style.display = 'flex';
+  document.getElementById('chartLoading').textContent = 'Cargando gráfico…';
+  updateModalStats();
+
+  const container = document.getElementById('chartContainer');
+  container.innerHTML = '';
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+
+  try {
+    const limit = 150;
+    const klines = await fetchJson([
+      `https://data-api.binance.vision/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`,
+      `https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`
+    ]);
+    if (modalPositionId !== id) return; // el usuario cerró el modal mientras cargaba
+
+    const candles = klines.map(k => ({
+      time: Math.floor(k[0] / 1000),
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4])
+    }));
+
+    const chart = LightweightCharts.createChart(container, {
+      width: container.clientWidth,
+      height: 300,
+      layout: { background: { color: 'transparent' }, textColor: '#8b8a94', fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+      grid: { vertLines: { color: '#2a2a34' }, horzLines: { color: '#2a2a34' } },
+      rightPriceScale: { borderColor: '#2a2a34' },
+      timeScale: { borderColor: '#2a2a34', timeVisible: true, secondsVisible: false },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    const series = chart.addCandlestickSeries({
+      upColor: '#35d499', downColor: '#ff5c72', borderVisible: false,
+      wickUpColor: '#35d499', wickDownColor: '#ff5c72'
+    });
+    series.setData(candles);
+
+    series.createPriceLine({ price: p.entry, color: '#f2a93b', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'Entrada' });
+    series.createPriceLine({ price: p.sl, color: '#ff5c72', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'SL' });
+    if (p.tp1) series.createPriceLine({ price: p.tp1, color: '#35d499', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: 'TP1' });
+    series.createPriceLine({ price: p.tp2, color: '#35d499', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'TP2' });
+
+    const liveCurrent = state[p.sym]?.last ?? candles[candles.length - 1].close;
+    activeCurrentPriceLine = series.createPriceLine({ price: liveCurrent, color: '#eae7df', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Solid, axisLabelVisible: true, title: 'Actual' });
+
+    chart.timeScale().fitContent();
+    activeChart = chart;
+    activeSeries = series;
+    document.getElementById('chartLoading').style.display = 'none';
+
+    const resizeObs = new ResizeObserver(() => {
+      if (activeChart) activeChart.applyOptions({ width: container.clientWidth });
+    });
+    resizeObs.observe(container);
+  } catch (e) {
+    console.error('Error cargando gráfico:', e);
+    document.getElementById('chartLoading').textContent = 'No se pudo cargar el gráfico. Probá de nuevo.';
+  }
+}
+
+document.getElementById('demoPositions').addEventListener('click', (e) => {
+  const chartBtn = e.target.closest('[data-chart]');
+  if (chartBtn) { openPositionChart(chartBtn.dataset.chart); return; }
+  const closeBtn = e.target.closest('[data-close]');
+  if (closeBtn) { closePositionManually(closeBtn.dataset.close); return; }
+});
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+posModal.addEventListener('click', (e) => { if (e.target === posModal) closeModal(); });
+document.getElementById('modalCloseTradeBtn').addEventListener('click', () => {
+  if (modalPositionId) closePositionManually(modalPositionId);
+});
 
 function resetDemo(){
   demo.balance=100; demo.start=100; demo.positions=[]; demo.history=[]; saveDemo();
