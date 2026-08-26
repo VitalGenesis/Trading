@@ -379,6 +379,7 @@ function updateCoin(coin, t) {
   const previous = state[coin.sym]?.last;
   const direction = previous == null ? null : last > previous ? 'up' : last < previous ? 'down' : null;
   state[coin.sym] = { ...(state[coin.sym] || {}), last, pct, high, low };
+  if (typeof demo !== 'undefined') renderDemo();
 
   const priceEl = document.getElementById('price-' + coin.sym);
   const chgEl = document.getElementById('chg-' + coin.sym);
@@ -762,11 +763,25 @@ function renderDemo(){
   const pnl = demo.balance-demo.start;
   document.getElementById('demoBalance').textContent=money(demo.balance);
   document.getElementById('demoEquity').textContent=money(demo.balance+floating);
-  const pnlEl=document.getElementById('demoPnl'); pnlEl.textContent=(pnl>=0?'+':'')+money(pnl).replace('US$','US$');
+  const pnlEl=document.getElementById('demoPnl'); pnlEl.textContent=(pnl>=0?'+':'')+money(pnl);
   pnlEl.style.color=pnl>=0?'var(--up)':'var(--down)';
   document.getElementById('demoTrades').textContent=demo.history.length;
   document.getElementById('demoPositions').innerHTML=demo.positions.length
-    ? demo.positions.map(p=>`<div class="demo-pos"><b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))} · SL ${fmt(p.sl,autoDecimals(p.sl))} · TP ${fmt(p.tp2,autoDecimals(p.tp2))} · qty ${p.qty.toFixed(6)} · PnL <span id="pnl-${p.id}">calculando…</span></div>`).join('')
+    ? demo.positions.map(p=>{
+        const st=state[p.sym];
+        const current=st?.last ?? p.entry;
+        const diff=p.side==='LONG' ? current-p.entry : p.entry-current;
+        const posPnl=diff*p.qty;
+        const cls=posPnl>=0?'var(--up)':'var(--down)';
+        return `<div class="demo-pos">
+          <b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))}
+          · actual ${fmt(current,autoDecimals(current))}
+          · SL ${fmt(p.sl,autoDecimals(p.sl))}
+          · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
+          · qty ${p.qty.toFixed(6)}
+          · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
+        </div>`;
+      }).join('')
     : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>';
   document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`<div class="history-row">${h.symbol} ${h.side} · ${h.result>=0?'+':''}${money(h.result)} · ${new Date(h.time).toLocaleString('es-AR')}</div>`).join('');
 }
