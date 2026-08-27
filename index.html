@@ -138,6 +138,33 @@
   .demo-trade-btn:disabled{opacity:.35;cursor:not-allowed}
   @media(max-width:430px){.demo-stats{grid-template-columns:1fr 1fr}}
 
+
+  .learning-dashboard{margin-top:14px;background:#191920;border:1px solid var(--panel-edge);border-radius:10px;padding:15px 16px}
+  .learning-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+  .learning-title{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.7px;color:var(--amber);font-weight:700}
+  .learning-sub{font-size:10px;color:var(--ink-dim);margin-top:4px;line-height:1.4}
+  .learning-warning{font-size:9px;color:var(--ink-dim);border:1px solid var(--panel-edge);border-radius:5px;padding:5px 7px;white-space:nowrap}
+  .learning-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .lesson-card{background:#18181f;border:1px solid var(--panel-edge);border-radius:8px;padding:11px}
+  .lesson-name{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--amber);letter-spacing:.4px}
+  .lesson-purpose{font-size:9.5px;color:var(--ink-dim);margin:3px 0 8px}
+  .lesson-row{display:grid;grid-template-columns:88px 1fr;gap:7px;padding:5px 0;border-top:1px solid rgba(255,255,255,.045);font-size:9.3px;line-height:1.35}
+  .lesson-row b{color:var(--ink)}.lesson-row span{color:var(--ink-dim)}
+  .lesson-example{margin-top:8px;padding:7px;background:#20202a;border-radius:6px;font-size:9.3px;line-height:1.4;color:var(--ink-dim)}
+  .lesson-example b{color:var(--ink)}
+  .workflow-card,.reading-card{margin-top:9px;padding:11px;background:#20202a;border:1px solid var(--panel-edge);border-radius:8px}
+  .workflow-title,.reading-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);font-weight:700;margin-bottom:9px}
+  .workflow-steps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .workflow-steps>div{background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;padding:8px}
+  .workflow-steps b{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:10px}
+  .workflow-steps span{display:block;font-size:9px;line-height:1.35;color:var(--ink-dim);margin-top:5px}
+  .workflow-steps strong{color:var(--ink)}
+  .reading-text{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 14px}
+  .reading-text span{font-size:9.5px;color:var(--ink-dim);line-height:1.4}
+  .reading-text b{color:var(--amber)}
+  @media(max-width:900px){.learning-grid{grid-template-columns:repeat(2,1fr)}.workflow-steps{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:600px){.learning-head{display:block}.learning-warning{display:inline-block;margin-top:7px}.learning-grid{grid-template-columns:1fr}.workflow-steps{grid-template-columns:1fr 1fr}.reading-text{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -164,27 +191,131 @@
   </div>
 
 
-  <section class="demo-panel" id="demoPanel">
-    <div class="demo-head">
+
+  <section class="learning-dashboard">
+    <div class="learning-head">
       <div>
-        <div class="demo-title">SIMULADOR DEMO</div>
-        <div class="demo-sub">Trading virtual · sin dinero real</div>
+        <div class="learning-title">ACADEMIA DE ANÁLISIS TÉCNICO</div>
+        <div class="learning-sub">Aprendé a leer los mismos indicadores que muestra esta app y a construir tu análisis manual.</div>
       </div>
-      <button class="demo-reset" id="demoReset">Reiniciar</button>
+      <div class="learning-warning">Un indicador aislado no es una señal de entrada.</div>
     </div>
-    <div class="demo-stats">
-      <div><span>Saldo</span><b id="demoBalance">US$100.00</b></div>
-      <div><span>Equity</span><b id="demoEquity">US$100.00</b></div>
-      <div><span>PnL</span><b id="demoPnl">US$0.00</b></div>
-      <div><span>Trades</span><b id="demoTrades">0</b></div>
-      <div><span>Margen abierto</span><b id="demoMargin">US$0.00</b></div>
+
+    <div class="learning-grid">
+      <article class="lesson-card">
+        <div class="lesson-name">RSI</div>
+        <div class="lesson-purpose">Momentum y fuerza relativa</div>
+        <div class="lesson-row"><b>Qué mide</b><span>La velocidad y magnitud de los movimientos recientes.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>0–100. Sobre 70 suele considerarse zona alta; debajo de 30, zona baja.</span></div>
+        <div class="lesson-row"><b>Para LONG</b><span>Buscá recuperación desde zonas bajas o divergencias dentro de un contexto alcista.</span></div>
+        <div class="lesson-row"><b>Para SHORT</b><span>Buscá pérdida de fuerza desde zonas altas o divergencias dentro de un contexto bajista.</span></div>
+        <div class="lesson-example"><b>Error común:</b> RSI &gt;70 no significa automáticamente “vender”; en una tendencia fuerte puede permanecer alto.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">STOCHASTIC</div>
+        <div class="lesson-purpose">Momentum y posibles giros de corto plazo</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>%K, %D y la zona donde ocurre el cruce.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>&gt;80 = zona alta; &lt;20 = zona baja.</span></div>
+        <div class="lesson-row"><b>Para LONG</b><span>Un cruce alcista desde zona baja puede apoyar un rebote si soporte y tendencia lo acompañan.</span></div>
+        <div class="lesson-row"><b>Para SHORT</b><span>Un cruce bajista desde zona alta puede apoyar un retroceso si la estructura lo confirma.</span></div>
+        <div class="lesson-example"><b>Error común:</b> operar cada cruce sin mirar tendencia, soporte/resistencia ni volumen.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">MACD</div>
+        <div class="lesson-purpose">Tendencia y momentum</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>Línea MACD, línea de señal y el histograma.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>Histograma positivo favorece momentum alcista; negativo favorece momentum bajista.</span></div>
+        <div class="lesson-row"><b>Para LONG</b><span>Cruce alcista y crecimiento del histograma pueden confirmar recuperación de momentum.</span></div>
+        <div class="lesson-row"><b>Para SHORT</b><span>Cruce bajista y pérdida de momentum pueden confirmar debilidad.</span></div>
+        <div class="lesson-example"><b>Error común:</b> entrar solamente porque las líneas se cruzaron, sin tener un nivel de precio claro.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">EMA 7 / EMA 25</div>
+        <div class="lesson-purpose">Dirección y tendencia dinámica</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>Relación entre las medias, pendiente y posición del precio.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>EMA 7 sobre EMA 25 = sesgo alcista; debajo = sesgo bajista.</span></div>
+        <div class="lesson-row"><b>Para LONG</b><span>Precio sobre ambas y medias ascendiendo favorecen buscar compras en retrocesos.</span></div>
+        <div class="lesson-row"><b>Para SHORT</b><span>Precio debajo de ambas y medias descendiendo favorecen buscar ventas en rebotes.</span></div>
+        <div class="lesson-example"><b>Error común:</b> usar el cruce de medias como entrada instantánea; suele llegar tarde respecto de la estructura.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">BOLLINGER BANDS</div>
+        <div class="lesson-purpose">Volatilidad y posición relativa del precio</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>Banda superior, media, inferior y amplitud de las bandas.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>Bandas estrechas = compresión; expansión = aumento de volatilidad.</span></div>
+        <div class="lesson-row"><b>En tendencia</b><span>El precio puede caminar por una banda; tocar la superior no implica automáticamente SHORT.</span></div>
+        <div class="lesson-row"><b>En rango</b><span>Los extremos pueden ayudar a identificar zonas de reacción, siempre con confirmación.</span></div>
+        <div class="lesson-example"><b>Error común:</b> tratar cada toque de una banda como reversión segura.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">ADX + DI</div>
+        <div class="lesson-purpose">Fuerza de la tendencia</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>ADX junto con +DI y −DI.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>ADX bajo sugiere poca fuerza; un ADX creciente/alto indica mayor fuerza de movimiento.</span></div>
+        <div class="lesson-row"><b>Dirección</b><span>+DI por encima de −DI favorece sesgo alcista; −DI por encima favorece sesgo bajista.</span></div>
+        <div class="lesson-row"><b>Uso clave</b><span>Ayuda a decidir si tiene más sentido buscar tendencia o ser paciente en un rango.</span></div>
+        <div class="lesson-example"><b>Error común:</b> pensar que ADX alto dice por sí solo si hay que comprar o vender; mide fuerza, no dirección.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">VOLUMEN</div>
+        <div class="lesson-purpose">Participación detrás del movimiento</div>
+        <div class="lesson-row"><b>Qué mirar</b><span>Volumen de la vela actual frente al promedio reciente.</span></div>
+        <div class="lesson-row"><b>Rupturas</b><span>Una ruptura acompañada de volumen fuerte suele ser más interesante que una ruptura sin participación.</span></div>
+        <div class="lesson-row"><b>Confirmación</b><span>Usalo junto a estructura y niveles, no como dirección independiente.</span></div>
+        <div class="lesson-row"><b>Precaución</b><span>Un pico de volumen también puede aparecer en liquidaciones o movimientos de agotamiento.</span></div>
+        <div class="lesson-example"><b>Error común:</b> asumir que “más volumen = LONG”. El volumen confirma actividad, no necesariamente dirección.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">ATR</div>
+        <div class="lesson-purpose">Volatilidad</div>
+        <div class="lesson-row"><b>Qué mide</b><span>Cuánto se mueve el activo en promedio dentro del período calculado.</span></div>
+        <div class="lesson-row"><b>Cómo leerlo</b><span>ATR alto = mayor volatilidad; ATR bajo = mercado más comprimido.</span></div>
+        <div class="lesson-row"><b>Uso práctico</b><span>Ayuda a evitar stops absurdamente pequeños y a adaptar el tamaño de la posición.</span></div>
+        <div class="lesson-row"><b>Importante</b><span>ATR no indica dirección: sirve para medir el “ruido” y el rango esperado de movimiento.</span></div>
+        <div class="lesson-example"><b>Error común:</b> usar el mismo SL en todos los activos y temporalidades.</div>
+      </article>
+
+      <article class="lesson-card">
+        <div class="lesson-name">SOPORTE / RESISTENCIA</div>
+        <div class="lesson-purpose">Estructura y zonas de decisión</div>
+        <div class="lesson-row"><b>Soporte</b><span>Zona donde el precio encontró demanda y reaccionó al alza.</span></div>
+        <div class="lesson-row"><b>Resistencia</b><span>Zona donde el precio encontró oferta y reaccionó a la baja.</span></div>
+        <div class="lesson-row"><b>Uso práctico</b><span>Sirven para planear entrada, invalidación y objetivos.</span></div>
+        <div class="lesson-row"><b>Rango</b><span>En un rango, soporte y resistencia suelen ser más importantes que perseguir indicadores.</span></div>
+        <div class="lesson-example"><b>Error común:</b> dibujar líneas exactas; normalmente conviene pensar en zonas.</div>
+      </article>
     </div>
-    <div class="demo-controls">
-      <label>Riesgo %<input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1"></label>
-      <label>Apalancamiento<input id="leverage" type="number" min="1" max="20" step="1" value="3"></label>
+
+    <div class="workflow-card">
+      <div class="workflow-title">CHECKLIST: CÓMO ANALIZAR UN TRADE VOS MISMO</div>
+      <div class="workflow-steps">
+        <div><b>01</b><span><strong>Contexto</strong><br>Elegí timeframe y preguntá: ¿tendencia, rango o transición?</span></div>
+        <div><b>02</b><span><strong>Estructura</strong><br>Buscá HH/HL o LH/LL y marcá soporte/resistencia.</span></div>
+        <div><b>03</b><span><strong>Confirmación</strong><br>EMA + MACD + RSI/Stoch + volumen. No necesitás que todos digan lo mismo.</span></div>
+        <div><b>04</b><span><strong>Entrada</strong><br>Definí una zona concreta y esperá que el precio llegue a ella.</span></div>
+        <div><b>05</b><span><strong>Invalidación</strong><br>Preguntá: “¿En qué precio mi idea deja de tener sentido?” Ahí va el SL.</span></div>
+        <div><b>06</b><span><strong>Objetivo</strong><br>Definí TP mirando niveles reales y calculá el R:R antes de entrar.</span></div>
+      </div>
     </div>
-    <div id="demoPositions" class="demo-positions"></div>
-    <div id="demoHistory" class="demo-history"></div>
+
+    <div class="reading-card">
+      <div class="reading-title">CÓMO USAR EL RESUMEN DE ANÁLISIS TÉCNICO</div>
+      <div class="reading-text">
+        <span><b>1.</b> Primero mirá la tendencia y la estructura.</span>
+        <span><b>2.</b> Después observá EMA, ADX y MACD para evaluar dirección y fuerza.</span>
+        <span><b>3.</b> Usá RSI y Stochastic para saber cómo está el momentum y buscar mejores momentos dentro de ese contexto.</span>
+        <span><b>4.</b> Confirmá rupturas o reacciones con volumen.</span>
+        <span><b>5.</b> Usá ATR para dimensionar el movimiento y el stop.</span>
+        <span><b>6.</b> Finalmente, preguntate dónde está el soporte/resistencia y si el trade tiene un R:R que valga la pena.</span>
+      </div>
+    </div>
   </section>
 
   <div class="board" id="board"></div>
@@ -248,8 +379,6 @@ function buildRow(coin){
     </div>
 
     <div class="trend-badge neutral" id="trend-${coin.sym}"><span>Calculando estado de tendencia…</span></div>
-    <div class="setup-card neutral" id="setup-${coin.sym}">
-      <div class="setup-top"><span class="setup-title">SETUP / SUGERENCIA</span><span class="setup-score" id="score-${coin.sym}">--/100</span></div>
       <div class="setup-main" id="setupMain-${coin.sym}">Analizando mercado…</div>
       <div class="setup-grid">
         <div>Entrada <b id="entry-${coin.sym}">--</b></div>
@@ -380,7 +509,6 @@ function updateCoin(coin, t) {
   const previous = state[coin.sym]?.last;
   const direction = previous == null ? null : last > previous ? 'up' : last < previous ? 'down' : null;
   state[coin.sym] = { ...(state[coin.sym] || {}), last, pct, high, low };
-  if (typeof demo !== 'undefined') renderDemo();
 
   const priceEl = document.getElementById('price-' + coin.sym);
   const chgEl = document.getElementById('chg-' + coin.sym);
@@ -700,7 +828,6 @@ async function loadIndicators(coin) {
 
     const atrVal = atrCalc(highs, lows, closes, 14);
     const atrPct = (atrVal / lastClose) * 100;
-    makeSetup(coin, { lastClose, highs, lows, closes, volumes, up, down, neutral, r, m, adxRes, atrVal, bb, ma7, ma25, lastCandleUp, volRatio });
     const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.` };
 
     const bandState = lastClose >= bb.upper ? 'upper' : lastClose <= bb.lower ? 'lower' : 'inside';
@@ -732,158 +859,6 @@ async function loadIndicators(coin) {
     const tallyEl = document.getElementById('tally-' + coin.sym);
     if (tallyEl) tallyEl.textContent = 'No se pudieron cargar los indicadores';
   }
-}
-
-
-/* ---------- DEMO + MOTOR DE SETUPS ---------- */
-const demo = {
-  balance: Number(localStorage.getItem('demoBalance') || 100),
-  start: Number(localStorage.getItem('demoStart') || 100),
-  positions: JSON.parse(localStorage.getItem('demoPositions') || '[]'),
-  history: JSON.parse(localStorage.getItem('demoHistory') || '[]')
-};
-
-function saveDemo(){
-  localStorage.setItem('demoBalance', demo.balance);
-  localStorage.setItem('demoStart', demo.start);
-  localStorage.setItem('demoPositions', JSON.stringify(demo.positions));
-  localStorage.setItem('demoHistory', JSON.stringify(demo.history));
-  renderDemo();
-}
-
-function money(n){ return 'US$' + Number(n).toFixed(2); }
-renderDemo();
-
-function renderDemo(){
-  const floating = demo.positions.reduce((s,p)=>{
-    const st = state[p.sym];
-    if(!st) return s;
-    const diff = p.side === 'LONG' ? st.last-p.entry : p.entry-st.last;
-    return s + diff*p.qty;
-  },0);
-  const pnl = demo.balance-demo.start;
-  document.getElementById('demoBalance').textContent=money(demo.balance);
-  document.getElementById('demoEquity').textContent=money(demo.balance+floating);
-  const pnlEl=document.getElementById('demoPnl'); pnlEl.textContent=(pnl>=0?'+':'')+money(pnl);
-  pnlEl.style.color=pnl>=0?'var(--up)':'var(--down)';
-  document.getElementById('demoTrades').textContent=demo.history.length;
-  document.getElementById('demoPositions').innerHTML=demo.positions.length
-    ? demo.positions.map(p=>{
-        const st=state[p.sym];
-        const current=st?.last ?? p.entry;
-        const diff=p.side==='LONG' ? current-p.entry : p.entry-current;
-        const posPnl=diff*p.qty;
-        const cls=posPnl>=0?'var(--up)':'var(--down)';
-        return `<div class="demo-pos">
-          <b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))}
-          · actual ${fmt(current,autoDecimals(current))}
-          · SL ${fmt(p.sl,autoDecimals(p.sl))}
-          · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
-          · qty ${p.qty.toFixed(6)}
-          · ${p.lev}x · margen ${money(p.margin)}
-          · riesgo ${money(p.riskCash)}
-          · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
-        </div>`;
-      }).join('')
-    : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>
-';
-  document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`<div class="history-row">${h.symbol} ${h.side} · ${h.result>=0?'+':''}${money(h.result)} · ${new Date(h.time).toLocaleString('es-AR')}</div>`).join('');
-}
-
-function resetDemo(){
-  demo.balance=100; demo.start=100; demo.positions=[]; demo.history=[]; saveDemo();
-}
-document.getElementById('demoReset').addEventListener('click',resetDemo);
-
-function takeDemoTrade(sym){
-  const s=state[sym], setup=s?.setup;
-  if(!s || !setup || !setup.side) return;
-  const riskPct=Math.max(.1,Math.min(5,Number(document.getElementById('riskPct').value)||1));
-  const lev=Math.max(1,Math.min(20,Number(document.getElementById('leverage').value)||3));
-
-  // El % de riesgo define CUÁNTO se pierde si el SL es alcanzado.
-  // El apalancamiento define CUÁNTO MARGEN se necesita para esa posición.
-  const riskCash=demo.balance*riskPct/100;
-  const stopDist=Math.abs(setup.entry-setup.sl);
-  if(!stopDist || riskCash<=0) return;
-
-  let qty=riskCash/stopDist;
-  let notional=qty*setup.entry;
-  let margin=notional/lev;
-
-  // Si la posición requiere más margen que el saldo disponible, se reduce
-  // automáticamente manteniendo el mismo % de riesgo como máximo.
-  if(margin>demo.balance){
-    margin=demo.balance;
-    notional=margin*lev;
-    qty=notional/setup.entry;
-  }
-  if(qty<=0 || !Number.isFinite(qty)) return;
-
-  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,lev,riskCash:Math.min(riskCash,stopDist*qty),notional,margin,time:Date.now()};
-  demo.positions.push(p);
-  saveDemo();
-  checkDemoPositions();
-}
-
-function closeDemoPosition(p, price, reason){
-  const diff=p.side==='LONG'?price-p.entry:p.entry-price;
-  const result=diff*p.qty;
-  demo.balance += result;
-  demo.history.push({...p,result,exit:price,reason,time:Date.now()});
-  demo.positions=demo.positions.filter(x=>x.id!==p.id);
-}
-
-function checkDemoPositions(){
-  for(const p of [...demo.positions]){
-    const s=state[p.sym]; if(!s) continue;
-    const price=s.last;
-    const hitSL=p.side==='LONG'?price<=p.sl:price>=p.sl;
-    const hitTP=p.side==='LONG'?price>=p.tp2:price<=p.tp2;
-    if(hitSL) closeDemoPosition(p,p.sl,'SL');
-    else if(hitTP) closeDemoPosition(p,p.tp2,'TP2');
-  }
-  saveDemo();
-}
-setInterval(checkDemoPositions,1000);
-
-function makeSetup(coin, data){
-  const {lastClose,highs,lows,closes,volumes,up,down,neutral,r,m,adxRes,atrVal,bb,ma7,ma25,lastCandleUp,volRatio}=data;
-  let scoreLong=50, scoreShort=50;
-  if(ma7>ma25){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
-  if(m.hist>0){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
-  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI)scoreLong+=15;else scoreShort+=15; }
-  if(volRatio>1.2){if(lastCandleUp)scoreLong+=7;else scoreShort+=7}
-  if(r<=30)scoreLong+=8;if(r>=70)scoreShort+=8;
-  const trend = up-down>=2?'alcista':down-up>=2?'bajista':'rango';
-  if(trend==='alcista')scoreLong+=6;if(trend==='bajista')scoreShort+=6;
-  scoreLong=Math.max(0,Math.min(100,scoreLong));scoreShort=Math.max(0,Math.min(100,scoreShort));
-  const best=Math.max(scoreLong,scoreShort);
-  const range = trend==='rango' || (adxRes && adxRes.adx<18);
-  let side=null;
-  if(!range && best>=68) side=scoreLong>scoreShort?'LONG':'SHORT';
-  const entry=lastClose;
-  const atr=Math.max(atrVal,lastClose*.001);
-  let sl,tp1,tp2;
-  if(side==='LONG'){sl=entry-1.2*atr;tp1=entry+1.5*atr;tp2=entry+2.4*atr}
-  else if(side==='SHORT'){sl=entry+1.2*atr;tp1=entry-1.5*atr;tp2=entry-2.4*atr}
-  const setup={symbol:coin.symbol,side,score:best,trend,entry,sl,tp1,tp2,range,updated:Date.now()};
-  state[coin.sym].setup=setup;
-  const card=document.getElementById('setup-'+coin.sym); if(!card)return;
-  card.className='setup-card '+(side==='LONG'?'up':side==='SHORT'?'down':'neutral');
-  document.getElementById('score-'+coin.sym).textContent=best+'/100';
-  document.getElementById('setupMain-'+coin.sym).textContent=range?'🟡 NO TRADE · RANGO / INDECISIÓN':side==='LONG'?'🟢 LONG · SETUP FAVORABLE':'🔴 SHORT · SETUP FAVORABLE';
-  document.getElementById('entry-'+coin.sym).textContent=fmt(entry,autoDecimals(entry));
-  document.getElementById('sl-'+coin.sym).textContent=side?fmt(sl,autoDecimals(entry)):'—';
-  document.getElementById('tp1-'+coin.sym).textContent=side?fmt(tp1,autoDecimals(entry)):'—';
-  document.getElementById('tp2-'+coin.sym).textContent=side?fmt(tp2,autoDecimals(entry)):'—';
-  document.getElementById('setupMeta-'+coin.sym).textContent=range
-    ? 'ADX débil / señales mixtas. Esperar ruptura y confirmación antes de entrar.'
-    : `Score ${best}/100 · riesgo calculable por distancia al SL · ${TF_LABELS[currentInterval]}. Esto es una regla algorítmica, no una predicción.`;
-  const btn=document.getElementById('take-'+coin.sym);
-  btn.disabled=!side;
-  btn.textContent=side?`Tomar ${side} en DEMO`:'No hay trade para tomar';
-  btn.onclick=()=>takeDemoTrade(coin.sym);
 }
 
 
