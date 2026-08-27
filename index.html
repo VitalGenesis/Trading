@@ -121,7 +121,7 @@
   .demo-title,.setup-title{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.7px;color:var(--amber);font-weight:700}
   .demo-sub{font-size:10.5px;color:var(--ink-dim);margin-top:3px}
   .demo-reset{background:none;border:1px solid var(--panel-edge);color:var(--ink-dim);border-radius:6px;padding:5px 8px;font-size:10px;cursor:pointer}
-  .demo-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:12px}
+  .demo-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
   .demo-stats div{background:#18181f;border:1px solid var(--panel-edge);border-radius:7px;padding:8px}
   .demo-stats span{display:block;color:var(--ink-dim);font-size:9px}.demo-stats b{font-family:'IBM Plex Mono',monospace;font-size:12px}
   .demo-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
@@ -136,7 +136,7 @@
   .setup-meta{font-size:10px;color:var(--ink-dim);line-height:1.45;margin-top:8px}
   .demo-trade-btn{width:100%;margin-top:9px;padding:9px;border:0;border-radius:7px;background:var(--amber);color:#1a1206;font-family:'IBM Plex Mono',monospace;font-weight:700;cursor:pointer}
   .demo-trade-btn:disabled{opacity:.35;cursor:not-allowed}
-  @media(max-width:430px){.demo-stats{grid-template-columns:1fr 1fr}}
+  @media(max-width:400px){.demo-stats{grid-template-columns:1fr 1fr}}
 
 </style>
 </head>
@@ -177,7 +177,6 @@
       <div><span>Equity</span><b id="demoEquity">US$100.00</b></div>
       <div><span>PnL</span><b id="demoPnl">US$0.00</b></div>
       <div><span>Trades</span><b id="demoTrades">0</b></div>
-      <div><span>Margen abierto</span><b id="demoMargin">US$0.00</b></div>
     </div>
     <div class="demo-controls">
       <label>Riesgo %<input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1"></label>
@@ -780,13 +779,10 @@ function renderDemo(){
           · SL ${fmt(p.sl,autoDecimals(p.sl))}
           · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
           · qty ${p.qty.toFixed(6)}
-          · ${p.lev}x · margen ${money(p.margin)}
-          · riesgo ${money(p.riskCash)}
           · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
         </div>`;
       }).join('')
-    : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>
-';
+    : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>';
   document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`<div class="history-row">${h.symbol} ${h.side} · ${h.result>=0?'+':''}${money(h.result)} · ${new Date(h.time).toLocaleString('es-AR')}</div>`).join('');
 }
 
@@ -800,30 +796,14 @@ function takeDemoTrade(sym){
   if(!s || !setup || !setup.side) return;
   const riskPct=Math.max(.1,Math.min(5,Number(document.getElementById('riskPct').value)||1));
   const lev=Math.max(1,Math.min(20,Number(document.getElementById('leverage').value)||3));
-
-  // El % de riesgo define CUÁNTO se pierde si el SL es alcanzado.
-  // El apalancamiento define CUÁNTO MARGEN se necesita para esa posición.
   const riskCash=demo.balance*riskPct/100;
   const stopDist=Math.abs(setup.entry-setup.sl);
   if(!stopDist || riskCash<=0) return;
-
-  let qty=riskCash/stopDist;
-  let notional=qty*setup.entry;
-  let margin=notional/lev;
-
-  // Si la posición requiere más margen que el saldo disponible, se reduce
-  // automáticamente manteniendo el mismo % de riesgo como máximo.
-  if(margin>demo.balance){
-    margin=demo.balance;
-    notional=margin*lev;
-    qty=notional/setup.entry;
-  }
-  if(qty<=0 || !Number.isFinite(qty)) return;
-
-  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,lev,riskCash:Math.min(riskCash,stopDist*qty),notional,margin,time:Date.now()};
-  demo.positions.push(p);
-  saveDemo();
-  checkDemoPositions();
+  const qty=riskCash/stopDist;
+  const notional=qty*setup.entry;
+  if(notional > demo.balance*lev) return alert('La posición excede el margen disponible con este apalancamiento.');
+  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,lev,riskCash,time:Date.now()};
+  demo.positions.push(p); saveDemo(); checkDemoPositions();
 }
 
 function closeDemoPosition(p, price, reason){
