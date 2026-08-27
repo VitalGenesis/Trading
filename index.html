@@ -139,31 +139,42 @@
   @media(max-width:430px){.demo-stats{grid-template-columns:1fr 1fr}}
 
 
-  .learning-dashboard{margin-top:14px;background:#191920;border:1px solid var(--panel-edge);border-radius:10px;padding:15px 16px}
-  .learning-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
-  .learning-title{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.7px;color:var(--amber);font-weight:700}
-  .learning-sub{font-size:10px;color:var(--ink-dim);margin-top:4px;line-height:1.4}
-  .learning-warning{font-size:9px;color:var(--ink-dim);border:1px solid var(--panel-edge);border-radius:5px;padding:5px 7px;white-space:nowrap}
-  .learning-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-  .lesson-card{background:#18181f;border:1px solid var(--panel-edge);border-radius:8px;padding:11px}
-  .lesson-name{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:var(--amber);letter-spacing:.4px}
-  .lesson-purpose{font-size:9.5px;color:var(--ink-dim);margin:3px 0 8px}
-  .lesson-row{display:grid;grid-template-columns:88px 1fr;gap:7px;padding:5px 0;border-top:1px solid rgba(255,255,255,.045);font-size:9.3px;line-height:1.35}
-  .lesson-row b{color:var(--ink)}.lesson-row span{color:var(--ink-dim)}
-  .lesson-example{margin-top:8px;padding:7px;background:#20202a;border-radius:6px;font-size:9.3px;line-height:1.4;color:var(--ink-dim)}
-  .lesson-example b{color:var(--ink)}
-  .workflow-card,.reading-card{margin-top:9px;padding:11px;background:#20202a;border:1px solid var(--panel-edge);border-radius:8px}
-  .workflow-title,.reading-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);font-weight:700;margin-bottom:9px}
-  .workflow-steps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-  .workflow-steps>div{background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;padding:8px}
-  .workflow-steps b{font-family:'IBM Plex Mono',monospace;color:var(--amber);font-size:10px}
-  .workflow-steps span{display:block;font-size:9px;line-height:1.35;color:var(--ink-dim);margin-top:5px}
-  .workflow-steps strong{color:var(--ink)}
-  .reading-text{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 14px}
-  .reading-text span{font-size:9.5px;color:var(--ink-dim);line-height:1.4}
-  .reading-text b{color:var(--amber)}
-  @media(max-width:900px){.learning-grid{grid-template-columns:repeat(2,1fr)}.workflow-steps{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:600px){.learning-head{display:block}.learning-warning{display:inline-block;margin-top:7px}.learning-grid{grid-template-columns:1fr}.workflow-steps{grid-template-columns:1fr 1fr}.reading-text{grid-template-columns:1fr}}
+  .academy{margin-top:16px;background:#15151b;border:1px solid var(--panel-edge);border-radius:12px;overflow:hidden}
+  .academy-header{padding:17px 18px;background:#1d1d25;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+  .academy-kicker,.sim-label,.manual-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;color:var(--amber);font-weight:700}
+  .academy-header h2{margin:5px 0 4px;font-size:18px;line-height:1.15}
+  .academy-header p{margin:0;color:var(--ink-dim);font-size:10.5px;max-width:700px;line-height:1.45}
+  .academy-badge{font-size:9px;color:var(--ink-dim);border:1px solid var(--panel-edge);border-radius:6px;padding:6px 8px;white-space:nowrap}
+  .lesson-tabs{display:flex;gap:5px;padding:9px 12px;background:#111116;border-bottom:1px solid var(--panel-edge);overflow-x:auto}
+  .lesson-tab{font:700 10px 'IBM Plex Mono',monospace;color:var(--ink-dim);background:#1b1b22;border:1px solid var(--panel-edge);border-radius:6px;padding:7px 10px;cursor:pointer;white-space:nowrap}
+  .lesson-tab.active{color:#17120a;background:var(--amber);border-color:var(--amber)}
+  .simulator{padding:12px}
+  .sim-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .sim-top strong{display:block;margin-top:3px;font:700 13px 'IBM Plex Mono',monospace}
+  .sim-actions{display:flex;align-items:center;gap:7px;font:10px 'IBM Plex Mono',monospace;color:var(--ink-dim)}
+  .sim-actions button,.sim-controls button{border:1px solid var(--panel-edge);background:#20202a;color:var(--ink);border-radius:6px;padding:6px 9px;cursor:pointer}
+  .sim-chart-wrap{position:relative;border:1px solid var(--panel-edge);border-radius:8px;background:#0e0e13;overflow:hidden}
+  #learningChart{display:block;width:100%;height:330px;cursor:crosshair}
+  .chart-tooltip{position:absolute;display:none;pointer-events:none;background:#20202a;border:1px solid var(--panel-edge);border-radius:5px;padding:5px 7px;font:9px 'IBM Plex Mono',monospace;color:var(--ink);white-space:nowrap}
+  .sim-controls{display:flex;align-items:center;gap:7px;margin-top:8px}
+  .sim-controls label{margin-left:auto;font-size:9px;color:var(--ink-dim)}
+  .sim-controls select{margin-left:4px;background:#20202a;color:var(--ink);border:1px solid var(--panel-edge);border-radius:5px;padding:5px}
+  .sim-readout{margin-top:9px;background:#1c1c24;border:1px solid var(--panel-edge);border-radius:8px;padding:9px}
+  .readout-main{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .readout-main span{font-size:9px;color:var(--ink-dim)}.readout-main b{font:700 13px 'IBM Plex Mono',monospace}
+  .readout-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+  .readout-grid div{background:#16161c;border-radius:5px;padding:6px}.readout-grid small{display:block;font-size:8px;color:var(--ink-dim)}.readout-grid b{display:block;margin-top:2px;font:700 10px 'IBM Plex Mono',monospace}
+  .lesson-explanation{margin-top:9px;padding:11px;background:#20202a;border-left:3px solid var(--amber);border-radius:6px;color:var(--ink);font-size:10.5px;line-height:1.55}
+  .lesson-explanation strong{color:var(--amber)}
+  .manual-guide{margin:0 12px 12px;padding:12px;background:#1b1b22;border:1px solid var(--panel-edge);border-radius:8px}
+  .manual-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+  .manual-point{padding:9px;background:#15151b;border:1px solid var(--panel-edge);border-radius:6px;font-size:9.7px;line-height:1.45;color:var(--ink-dim)}
+  .manual-point b{display:block;color:var(--ink);margin-bottom:3px}
+  .practice-card{margin:0 12px 12px;padding:12px;background:#20202a;border:1px solid var(--panel-edge);border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+  .challenge-options{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+  .challenge-options button{font-size:9px;background:#18181f;color:var(--ink);border:1px solid var(--panel-edge);border-radius:5px;padding:6px 8px;cursor:pointer}
+  .challenge-result{grid-column:1/-1;font-size:9.5px;color:var(--ink-dim);min-height:15px}
+  @media(max-width:760px){.academy-header{display:block}.academy-badge{display:inline-block;margin-top:9px}.readout-grid{grid-template-columns:repeat(3,1fr)}.manual-body{grid-template-columns:1fr}.practice-card{grid-template-columns:1fr}.challenge-options{justify-content:flex-start}}
 
 </style>
 </head>
@@ -192,129 +203,88 @@
 
 
 
-  <section class="learning-dashboard">
-    <div class="learning-head">
+
+  <section class="academy">
+    <div class="academy-header">
       <div>
-        <div class="learning-title">ACADEMIA DE ANÁLISIS TÉCNICO</div>
-        <div class="learning-sub">Aprendé a leer los mismos indicadores que muestra esta app y a construir tu análisis manual.</div>
+        <div class="academy-kicker">MODO APRENDIZAJE · SIMULADOR INTERACTIVO</div>
+        <h2>Aprendé a leer un indicador viendo qué hace sobre el gráfico</h2>
+        <p>Elegí una lección. Vas a poder tocar el gráfico, mover el cursor, activar/desactivar indicadores y avanzar paso a paso.</p>
       </div>
-      <div class="learning-warning">Un indicador aislado no es una señal de entrada.</div>
+      <div class="academy-badge">PRÁCTICA · SIN TRADES REALES</div>
     </div>
 
-    <div class="learning-grid">
-      <article class="lesson-card">
-        <div class="lesson-name">RSI</div>
-        <div class="lesson-purpose">Momentum y fuerza relativa</div>
-        <div class="lesson-row"><b>Qué mide</b><span>La velocidad y magnitud de los movimientos recientes.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>0–100. Sobre 70 suele considerarse zona alta; debajo de 30, zona baja.</span></div>
-        <div class="lesson-row"><b>Para LONG</b><span>Buscá recuperación desde zonas bajas o divergencias dentro de un contexto alcista.</span></div>
-        <div class="lesson-row"><b>Para SHORT</b><span>Buscá pérdida de fuerza desde zonas altas o divergencias dentro de un contexto bajista.</span></div>
-        <div class="lesson-example"><b>Error común:</b> RSI &gt;70 no significa automáticamente “vender”; en una tendencia fuerte puede permanecer alto.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">STOCHASTIC</div>
-        <div class="lesson-purpose">Momentum y posibles giros de corto plazo</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>%K, %D y la zona donde ocurre el cruce.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>&gt;80 = zona alta; &lt;20 = zona baja.</span></div>
-        <div class="lesson-row"><b>Para LONG</b><span>Un cruce alcista desde zona baja puede apoyar un rebote si soporte y tendencia lo acompañan.</span></div>
-        <div class="lesson-row"><b>Para SHORT</b><span>Un cruce bajista desde zona alta puede apoyar un retroceso si la estructura lo confirma.</span></div>
-        <div class="lesson-example"><b>Error común:</b> operar cada cruce sin mirar tendencia, soporte/resistencia ni volumen.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">MACD</div>
-        <div class="lesson-purpose">Tendencia y momentum</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>Línea MACD, línea de señal y el histograma.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>Histograma positivo favorece momentum alcista; negativo favorece momentum bajista.</span></div>
-        <div class="lesson-row"><b>Para LONG</b><span>Cruce alcista y crecimiento del histograma pueden confirmar recuperación de momentum.</span></div>
-        <div class="lesson-row"><b>Para SHORT</b><span>Cruce bajista y pérdida de momentum pueden confirmar debilidad.</span></div>
-        <div class="lesson-example"><b>Error común:</b> entrar solamente porque las líneas se cruzaron, sin tener un nivel de precio claro.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">EMA 7 / EMA 25</div>
-        <div class="lesson-purpose">Dirección y tendencia dinámica</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>Relación entre las medias, pendiente y posición del precio.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>EMA 7 sobre EMA 25 = sesgo alcista; debajo = sesgo bajista.</span></div>
-        <div class="lesson-row"><b>Para LONG</b><span>Precio sobre ambas y medias ascendiendo favorecen buscar compras en retrocesos.</span></div>
-        <div class="lesson-row"><b>Para SHORT</b><span>Precio debajo de ambas y medias descendiendo favorecen buscar ventas en rebotes.</span></div>
-        <div class="lesson-example"><b>Error común:</b> usar el cruce de medias como entrada instantánea; suele llegar tarde respecto de la estructura.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">BOLLINGER BANDS</div>
-        <div class="lesson-purpose">Volatilidad y posición relativa del precio</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>Banda superior, media, inferior y amplitud de las bandas.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>Bandas estrechas = compresión; expansión = aumento de volatilidad.</span></div>
-        <div class="lesson-row"><b>En tendencia</b><span>El precio puede caminar por una banda; tocar la superior no implica automáticamente SHORT.</span></div>
-        <div class="lesson-row"><b>En rango</b><span>Los extremos pueden ayudar a identificar zonas de reacción, siempre con confirmación.</span></div>
-        <div class="lesson-example"><b>Error común:</b> tratar cada toque de una banda como reversión segura.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">ADX + DI</div>
-        <div class="lesson-purpose">Fuerza de la tendencia</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>ADX junto con +DI y −DI.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>ADX bajo sugiere poca fuerza; un ADX creciente/alto indica mayor fuerza de movimiento.</span></div>
-        <div class="lesson-row"><b>Dirección</b><span>+DI por encima de −DI favorece sesgo alcista; −DI por encima favorece sesgo bajista.</span></div>
-        <div class="lesson-row"><b>Uso clave</b><span>Ayuda a decidir si tiene más sentido buscar tendencia o ser paciente en un rango.</span></div>
-        <div class="lesson-example"><b>Error común:</b> pensar que ADX alto dice por sí solo si hay que comprar o vender; mide fuerza, no dirección.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">VOLUMEN</div>
-        <div class="lesson-purpose">Participación detrás del movimiento</div>
-        <div class="lesson-row"><b>Qué mirar</b><span>Volumen de la vela actual frente al promedio reciente.</span></div>
-        <div class="lesson-row"><b>Rupturas</b><span>Una ruptura acompañada de volumen fuerte suele ser más interesante que una ruptura sin participación.</span></div>
-        <div class="lesson-row"><b>Confirmación</b><span>Usalo junto a estructura y niveles, no como dirección independiente.</span></div>
-        <div class="lesson-row"><b>Precaución</b><span>Un pico de volumen también puede aparecer en liquidaciones o movimientos de agotamiento.</span></div>
-        <div class="lesson-example"><b>Error común:</b> asumir que “más volumen = LONG”. El volumen confirma actividad, no necesariamente dirección.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">ATR</div>
-        <div class="lesson-purpose">Volatilidad</div>
-        <div class="lesson-row"><b>Qué mide</b><span>Cuánto se mueve el activo en promedio dentro del período calculado.</span></div>
-        <div class="lesson-row"><b>Cómo leerlo</b><span>ATR alto = mayor volatilidad; ATR bajo = mercado más comprimido.</span></div>
-        <div class="lesson-row"><b>Uso práctico</b><span>Ayuda a evitar stops absurdamente pequeños y a adaptar el tamaño de la posición.</span></div>
-        <div class="lesson-row"><b>Importante</b><span>ATR no indica dirección: sirve para medir el “ruido” y el rango esperado de movimiento.</span></div>
-        <div class="lesson-example"><b>Error común:</b> usar el mismo SL en todos los activos y temporalidades.</div>
-      </article>
-
-      <article class="lesson-card">
-        <div class="lesson-name">SOPORTE / RESISTENCIA</div>
-        <div class="lesson-purpose">Estructura y zonas de decisión</div>
-        <div class="lesson-row"><b>Soporte</b><span>Zona donde el precio encontró demanda y reaccionó al alza.</span></div>
-        <div class="lesson-row"><b>Resistencia</b><span>Zona donde el precio encontró oferta y reaccionó a la baja.</span></div>
-        <div class="lesson-row"><b>Uso práctico</b><span>Sirven para planear entrada, invalidación y objetivos.</span></div>
-        <div class="lesson-row"><b>Rango</b><span>En un rango, soporte y resistencia suelen ser más importantes que perseguir indicadores.</span></div>
-        <div class="lesson-example"><b>Error común:</b> dibujar líneas exactas; normalmente conviene pensar en zonas.</div>
-      </article>
+    <div class="lesson-tabs">
+      <button class="lesson-tab active" data-lesson="rsi">RSI</button>
+      <button class="lesson-tab" data-lesson="macd">MACD</button>
+      <button class="lesson-tab" data-lesson="ema">EMA</button>
+      <button class="lesson-tab" data-lesson="bb">BOLLINGER</button>
+      <button class="lesson-tab" data-lesson="adx">ADX</button>
+      <button class="lesson-tab" data-lesson="volume">VOLUMEN</button>
+      <button class="lesson-tab" data-lesson="atr">ATR</button>
+      <button class="lesson-tab" data-lesson="sr">S/R</button>
     </div>
 
-    <div class="workflow-card">
-      <div class="workflow-title">CHECKLIST: CÓMO ANALIZAR UN TRADE VOS MISMO</div>
-      <div class="workflow-steps">
-        <div><b>01</b><span><strong>Contexto</strong><br>Elegí timeframe y preguntá: ¿tendencia, rango o transición?</span></div>
-        <div><b>02</b><span><strong>Estructura</strong><br>Buscá HH/HL o LH/LL y marcá soporte/resistencia.</span></div>
-        <div><b>03</b><span><strong>Confirmación</strong><br>EMA + MACD + RSI/Stoch + volumen. No necesitás que todos digan lo mismo.</span></div>
-        <div><b>04</b><span><strong>Entrada</strong><br>Definí una zona concreta y esperá que el precio llegue a ella.</span></div>
-        <div><b>05</b><span><strong>Invalidación</strong><br>Preguntá: “¿En qué precio mi idea deja de tener sentido?” Ahí va el SL.</span></div>
-        <div><b>06</b><span><strong>Objetivo</strong><br>Definí TP mirando niveles reales y calculá el R:R antes de entrar.</span></div>
+    <div class="simulator">
+      <div class="sim-top">
+        <div>
+          <span class="sim-label">SIMULACIÓN</span>
+          <strong id="simTitle">RSI · Momentum</strong>
+        </div>
+        <div class="sim-actions">
+          <button id="simBack">←</button>
+          <span id="simStep">1 / 4</span>
+          <button id="simNext">→</button>
+        </div>
       </div>
+
+      <div class="sim-chart-wrap">
+        <canvas id="learningChart" height="330"></canvas>
+        <div class="chart-tooltip" id="chartTooltip"></div>
+      </div>
+
+      <div class="sim-controls">
+        <button id="playSim">▶ Reproducir</button>
+        <button id="resetSim">↺ Reiniciar</button>
+        <label>Velocidad
+          <select id="simSpeed">
+            <option value="1400">Lenta</option>
+            <option value="800" selected>Normal</option>
+            <option value="400">Rápida</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="sim-readout">
+        <div class="readout-main">
+          <span id="simCandle">Vela 1</span>
+          <b id="simPrice">US$ 100.00</b>
+        </div>
+        <div class="readout-grid">
+          <div><small>RSI</small><b id="simRsi">50</b></div>
+          <div><small>MACD</small><b id="simMacd">0.00</b></div>
+          <div><small>EMA 7</small><b id="simEma7">100.00</b></div>
+          <div><small>EMA 25</small><b id="simEma25">100.00</b></div>
+          <div><small>ADX</small><b id="simAdx">18</b></div>
+          <div><small>ATR</small><b id="simAtr">1.20</b></div>
+        </div>
+      </div>
+
+      <div class="lesson-explanation" id="lessonExplanation"></div>
     </div>
 
-    <div class="reading-card">
-      <div class="reading-title">CÓMO USAR EL RESUMEN DE ANÁLISIS TÉCNICO</div>
-      <div class="reading-text">
-        <span><b>1.</b> Primero mirá la tendencia y la estructura.</span>
-        <span><b>2.</b> Después observá EMA, ADX y MACD para evaluar dirección y fuerza.</span>
-        <span><b>3.</b> Usá RSI y Stochastic para saber cómo está el momentum y buscar mejores momentos dentro de ese contexto.</span>
-        <span><b>4.</b> Confirmá rupturas o reacciones con volumen.</span>
-        <span><b>5.</b> Usá ATR para dimensionar el movimiento y el stop.</span>
-        <span><b>6.</b> Finalmente, preguntate dónde está el soporte/resistencia y si el trade tiene un R:R que valga la pena.</span>
+    <div class="manual-guide">
+      <div class="manual-title">LECTURA MANUAL · PASO A PASO</div>
+      <div class="manual-body" id="manualBody"></div>
+    </div>
+
+    <div class="practice-card">
+      <div>
+        <div class="manual-title">MINI DESAFÍO</div>
+        <div id="challengeText">Antes de avanzar, mirá el gráfico: ¿qué está haciendo el RSI?</div>
       </div>
+      <div class="challenge-options" id="challengeOptions"></div>
+      <div class="challenge-result" id="challengeResult"></div>
     </div>
   </section>
 
@@ -861,6 +831,305 @@ async function loadIndicators(coin) {
   }
 }
 
+
+
+/* ---------- ACADEMIA INTERACTIVA ---------- */
+(function(){
+  const lessons = {
+    rsi:{
+      title:'RSI · Momentum',
+      steps:[
+        ['Qué estás viendo','El RSI se mueve entre 0 y 100. En esta simulación el precio cae y después rebota. Mirá cómo el RSI acompaña ese cambio de momentum.'],
+        ['Zona baja','Cuando el RSI entra debajo de 30 hablamos de una zona de sobreventa relativa. Eso NO significa que haya que comprar inmediatamente.'],
+        ['El rebote','Esperá a que el RSI empiece a recuperar fuerza y buscá confirmación en precio: soporte, estructura o una vela de rechazo.'],
+        ['Cómo lo usarías','Pensá el RSI como una pieza del rompecabezas: primero contexto y estructura; después usalo para evaluar momentum y timing.']
+      ],
+      metric:'rsi',
+      manual:[
+        ['1 · Mirá el número','30 y 70 son referencias, no paredes. En tendencia fuerte el RSI puede permanecer mucho tiempo en zonas extremas.'],
+        ['2 · Mirá la dirección','RSI subiendo = momentum alcista mejorando; bajando = momentum debilitándose.'],
+        ['3 · Compará con el precio','Una divergencia puede ser útil: precio hace nuevo máximo pero RSI no, por ejemplo. No es señal garantizada.'],
+        ['4 · Confirmá','Nunca uses “RSI 70 = SHORT” o “RSI 30 = LONG” como regla única.']
+      ],
+      challenge:'El RSI acaba de caer a 27 y el precio todavía está bajando. ¿Qué harías?',
+      answers:[
+        ['Comprar ya','wrong'],
+        ['Esperar confirmación','right'],
+        ['Vender porque está bajo','wrong']
+      ]
+    },
+    macd:{
+      title:'MACD · Momentum + tendencia',
+      steps:[
+        ['Qué estás viendo','El MACD compara medias para mostrar cambios de momentum. La línea de señal ayuda a visualizar cruces y el histograma muestra la distancia entre ambas.'],
+        ['Momentum negativo','Mientras el histograma es negativo, el momentum favorece la parte bajista. Observá qué pasa cuando empieza a reducirse.'],
+        ['Cambio','Cuando el histograma pasa hacia positivo y el MACD cruza la señal, el momentum alcista está ganando fuerza.'],
+        ['Cómo lo usarías','Usalo como confirmación de una idea que ya tenga estructura y nivel de precio.']
+      ],
+      metric:'macd',
+      manual:[
+        ['1 · Histograma','Negativo = momentum bajista; positivo = momentum alcista.'],
+        ['2 · Cruces','Cruce alcista puede señalar recuperación de momentum; bajista, pérdida de fuerza.'],
+        ['3 · Cero','La relación con la línea cero ayuda a entender el contexto de tendencia.'],
+        ['4 · Confirmá con precio','Un cruce sin nivel de entrada, SL y estructura no es un trade completo.']
+      ],
+      challenge:'El MACD cruza al alza, pero el precio está justo debajo de una resistencia fuerte. ¿Qué hacés?',
+      answers:[['Entrar sin mirar','wrong'],['Esperar confirmación/ruptura','right'],['Short automático','wrong']]
+    },
+    ema:{
+      title:'EMA 7 / 25 · Dirección',
+      steps:[
+        ['Qué estás viendo','Las EMA suavizan el precio. La 7 reacciona más rápido y la 25 más lento.'],
+        ['Tendencia alcista','Cuando EMA 7 está sobre EMA 25 y ambas apuntan hacia arriba, el sesgo es alcista.'],
+        ['Retroceso','El precio puede volver hacia las medias sin que la tendencia termine. Eso puede ser una zona para estudiar, no una entrada automática.'],
+        ['Cómo lo usarías','Definí primero la dirección. Después buscá estructura y una zona donde el riesgo tenga sentido.']
+      ],
+      metric:'ema',
+      manual:[
+        ['1 · Relación','7 sobre 25 favorece sesgo alcista; 7 debajo de 25 favorece sesgo bajista.'],
+        ['2 · Pendiente','Dos medias ascendiendo cuentan más que un simple cruce aislado.'],
+        ['3 · Precio','Precio sobre las dos = mayor fortaleza; debajo = mayor debilidad.'],
+        ['4 · No persigas','Después de un movimiento muy extendido, esperar retroceso puede ser mejor que entrar tarde.']
+      ],
+      challenge:'EMA 7 está sobre EMA 25, pero ambas están planas y el precio rebota entre soporte y resistencia. ¿Tendencia fuerte?',
+      answers:[['Sí, seguro','wrong'],['No necesariamente; puede ser rango','right'],['Short automático','wrong']]
+    },
+    bb:{
+      title:'Bollinger Bands · Volatilidad',
+      steps:[
+        ['Qué estás viendo','Las bandas rodean una media y se expanden o contraen según la volatilidad.'],
+        ['Compresión','Cuando las bandas se estrechan, el mercado está comprimido. Puede preceder un movimiento, pero no dice hacia dónde.'],
+        ['Expansión','Cuando se expanden y el precio rompe una zona, mirá volumen y estructura para decidir si la ruptura tiene fuerza.'],
+        ['Cómo lo usarías','No vendas simplemente porque el precio toca la banda superior. En tendencias fuertes puede caminar por ella.']
+      ],
+      metric:'bb',
+      manual:[
+        ['1 · Amplitud','Bandas estrechas = poca volatilidad relativa; anchas = mayor volatilidad.'],
+        ['2 · Posición','Precio cerca de una banda indica posición extrema relativa, no reversión garantizada.'],
+        ['3 · Squeeze','Una compresión merece atención porque puede terminar en expansión.'],
+        ['4 · Confirmá','Ruptura + volumen + estructura es mucho más útil que “tocó banda”.']
+      ],
+      challenge:'El precio toca la banda superior mientras la EMA 7 y 25 suben con fuerza. ¿SHORT automático?',
+      answers:[['Sí','wrong'],['No; puede seguir la tendencia','right'],['Cerrar todo','wrong']]
+    },
+    adx:{
+      title:'ADX + DI · Fuerza',
+      steps:[
+        ['Qué estás viendo','ADX intenta medir fuerza de tendencia. +DI y −DI ayudan a ver qué lado domina.'],
+        ['Rango','ADX bajo suele acompañar mercados sin una tendencia fuerte. En ese escenario perseguir rupturas puede ser peligroso.'],
+        ['Tendencia','Cuando ADX sube y un DI domina, hay mayor evidencia de movimiento con dirección.'],
+        ['Cómo lo usarías','Primero preguntá “¿hay tendencia?”. Después decidí si tu estrategia debería buscar continuación o trabajar un rango.']
+      ],
+      metric:'adx',
+      manual:[
+        ['1 · ADX','No dice LONG o SHORT. Dice cuánta fuerza tiene el movimiento.'],
+        ['2 · +DI / −DI','+DI dominante favorece sesgo alcista; −DI dominante favorece bajista.'],
+        ['3 · ADX subiendo','La tendencia está ganando fuerza.'],
+        ['4 · ADX bajo','Pensá en rango, paciencia y niveles antes que en perseguir movimientos.']
+      ],
+      challenge:'ADX está en 14 y el precio oscila entre soporte y resistencia. ¿Qué contexto parece más probable?',
+      answers:[['Tendencia fortísima','wrong'],['Rango / poca fuerza','right'],['Comprar siempre','wrong']]
+    },
+    volume:{
+      title:'Volumen · Participación',
+      steps:[
+        ['Qué estás viendo','El volumen muestra cuánta actividad hubo en cada vela. En la simulación aparece un pico durante una ruptura.'],
+        ['Movimiento sin volumen','Una ruptura con poco volumen puede tener menos convicción y mayor riesgo de fallo.'],
+        ['Confirmación','Si precio rompe una resistencia y el volumen aumenta claramente, la ruptura merece más atención.'],
+        ['Cuidado','Volumen alto también aparece en liquidaciones o capitulación. Dirección y contexto siguen siendo necesarios.']
+      ],
+      metric:'volume',
+      manual:[
+        ['1 · Compará','No mires un volumen aislado: comparalo con las velas anteriores.'],
+        ['2 · Rupturas','Una ruptura acompañada de participación suele ser más convincente.'],
+        ['3 · Dirección','Volumen no significa “compradores”; muestra actividad. Mirá la vela y el nivel.'],
+        ['4 · Confirmá','Usalo junto con estructura, soporte/resistencia y momentum.']
+      ],
+      challenge:'La resistencia rompe pero el volumen es igual o menor al promedio. ¿Qué conclusión es prudente?',
+      answers:[['Ruptura confirmada','wrong'],['Esperar confirmación','right'],['SHORT inmediato','wrong']]
+    },
+    atr:{
+      title:'ATR · Volatilidad',
+      steps:[
+        ['Qué estás viendo','ATR estima el rango verdadero promedio. Acá aumenta cuando las velas empiezan a ser más grandes.'],
+        ['ATR bajo','Mercado relativamente tranquilo. Un stop muy ajustado puede ser suficiente o no, dependiendo de la estructura.'],
+        ['ATR alto','Hay más movimiento. Un stop demasiado cercano puede quedar dentro del ruido normal.'],
+        ['Cómo lo usarías','ATR ayuda a adaptar SL y tamaño de posición. No te dice la dirección.']
+      ],
+      metric:'atr',
+      manual:[
+        ['1 · Volatilidad','ATR alto = más movimiento; bajo = menos movimiento.'],
+        ['2 · Stop','No pongas un SL arbitrariamente cerca si el ruido normal del activo es mayor.'],
+        ['3 · Tamaño','Si ampliás el SL, reducí el tamaño de posición para mantener el riesgo.'],
+        ['4 · Dirección','ATR jamás te dice por sí solo LONG o SHORT.']
+      ],
+      challenge:'Tu stop está a US$0,20 pero el ATR del activo es US$1,50. ¿Qué deberías revisar?',
+      answers:[['Nada','wrong'],['Si el stop está demasiado cerca del ruido normal','right'],['Subir apalancamiento','wrong']]
+    },
+    sr:{
+      title:'Soporte / Resistencia · Estructura',
+      steps:[
+        ['Qué estás viendo','El gráfico muestra zonas donde el precio reaccionó varias veces. No son líneas mágicas: son áreas.'],
+        ['Soporte','Cuando el precio cae hacia una zona donde antes apareció demanda, estudiás si vuelve a reaccionar.'],
+        ['Resistencia','Cuando sube hacia una zona donde antes apareció oferta, estudiás si rechaza o rompe.'],
+        ['Cómo lo usarías','Son fundamentales para definir entrada, invalidación y objetivos antes de abrir una posición.']
+      ],
+      metric:'sr',
+      manual:[
+        ['1 · Marcá zonas','Buscá máximos y mínimos relevantes, no cada pequeña vela.'],
+        ['2 · Reacción','Cuantas más reacciones relevantes, más atención merece la zona.'],
+        ['3 · Ruptura','Una resistencia rota puede convertirse en soporte, pero esperá confirmación.'],
+        ['4 · R:R','Usá niveles para calcular si el objetivo justifica el riesgo.']
+      ],
+      challenge:'Querés LONG justo debajo de una resistencia muy cercana. ¿Qué deberías calcular antes?',
+      answers:[['Nada','wrong'],['R:R y espacio hasta la resistencia','right'],['Solo RSI','wrong']]
+    }
+  };
+
+  let lesson='rsi', step=0, playing=false, timer=null, hoverX=null;
+  const canvas=document.getElementById('learningChart'), ctx=canvas.getContext('2d');
+  const $=id=>document.getElementById(id);
+
+  function buildData(){
+    const n=70, data=[];
+    for(let i=0;i<n;i++){
+      let trend=i<18?-0.35:i<42?0.28:i<54?-0.12:0.45;
+      let wave=Math.sin(i/2.8)*1.3 + Math.sin(i/6.5)*1.7;
+      let noise=(Math.sin(i*7.13)*0.55);
+      let close=100 + i*trend + wave + noise;
+      if(i>=30&&i<=39) close+=Math.sin((i-30)/9*Math.PI)*5;
+      if(i>=50) close+= (i-50)*0.55;
+      let prev=i?data[i-1].close:close-0.4;
+      let high=Math.max(close,prev)+0.45+Math.abs(Math.sin(i))*0.3;
+      let low=Math.min(close,prev)-0.45-Math.abs(Math.cos(i))*0.25;
+      let vol=90+Math.abs(Math.sin(i/3))*30;
+      if(i>=30&&i<=39)vol+=80;
+      if(i===54||i===55)vol+=120;
+      data.push({open:prev,close,high,low,volume:vol});
+    }
+    return data;
+  }
+  const data=buildData();
+
+  function ema(values,p){
+    const out=[]; const k=2/(p+1); let e=values[0];
+    values.forEach((v,i)=>{if(i===0)e=v;else e=v*k+e*(1-k);out.push(e)}); return out;
+  }
+  function calc(){
+    const closes=data.map(x=>x.close), e7=ema(closes,7), e25=ema(closes,25);
+    const rsi=closes.map((_,i)=>{
+      if(i<14)return 50;
+      let gain=0,loss=0;
+      for(let j=i-13;j<=i;j++){const d=closes[j]-closes[j-1];if(d>0)gain+=d;else loss-=d}
+      if(loss===0)return 100;
+      return 100-(100/(1+gain/loss));
+    });
+    const fast=ema(closes,12), slow=ema(closes,26);
+    const macd=fast.map((v,i)=>v-slow[i]), signal=ema(macd,9), hist=macd.map((v,i)=>v-signal[i]);
+    const atr=closes.map((_,i)=>{
+      if(i===0)return 1;
+      let sum=0,c=0;
+      for(let j=Math.max(1,i-13);j<=i;j++){sum+=Math.max(data[j].high-data[j].low,Math.abs(data[j].high-data[j-1].close),Math.abs(data[j].low-data[j-1].close));c++}
+      return sum/c;
+    });
+    const adx=closes.map((_,i)=> i<14?18:18+Math.min(28,Math.abs(e7[i]-e25[i])*3));
+    const volAvg=closes.map((_,i)=>{let a=data.slice(Math.max(0,i-9),i+1);return a.reduce((s,x)=>s+x.volume,0)/a.length});
+    return {e7,e25,rsi,macd,signal,hist,atr,adx,volAvg};
+  }
+  const ind=calc();
+
+  function resize(){
+    const rect=canvas.getBoundingClientRect(), dpr=devicePixelRatio||1;
+    canvas.width=rect.width*dpr; canvas.height=330*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    draw();
+  }
+  function draw(){
+    const W=canvas.clientWidth,H=330, pad={l:44,r:16,t:18,b:30}, end=Math.max(10,Math.min(data.length, 18+step*16));
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;
+    for(let i=0;i<5;i++){let y=pad.t+i*(H-pad.t-pad.b)/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
+    const slice=data.slice(0,end), min=Math.min(...slice.map(x=>x.low))-1, max=Math.max(...slice.map(x=>x.high))+1;
+    const x=i=>pad.l+i*(W-pad.l-pad.r)/Math.max(1,slice.length-1), y=v=>pad.t+(max-v)*(H-pad.t-pad.b)/(max-min);
+    const candleW=Math.max(3,(W-pad.l-pad.r)/slice.length*.62);
+    ctx.font='9px IBM Plex Mono, monospace';ctx.fillStyle='#7f8794';
+    for(let i=0;i<=4;i++){let v=min+(max-min)*(1-i/4);ctx.fillText(v.toFixed(1),5,pad.t+i*(H-pad.t-pad.b)/4+3)}
+    slice.forEach((c,i)=>{
+      const xx=x(i);ctx.strokeStyle='#858b98';ctx.beginPath();ctx.moveTo(xx,y(c.high));ctx.lineTo(xx,y(c.low));ctx.stroke();
+      ctx.fillStyle=c.close>=c.open?'#35d499':'#ff5c72';
+      const top=y(Math.max(c.open,c.close)), bot=y(Math.min(c.open,c.close));ctx.fillRect(xx-candleW/2,top,candleW,Math.max(1,bot-top));
+    });
+    function line(vals, upToEnd, dash){
+      ctx.beginPath();let first=true;ctx.setLineDash(dash||[]);
+      vals.slice(0,end).forEach((v,i)=>{if(first){ctx.moveTo(x(i),y(v));first=false}else ctx.lineTo(x(i),y(v))});
+      ctx.stroke();ctx.setLineDash([]);
+    }
+    if(lesson==='ema'||lesson==='rsi'||lesson==='macd'||lesson==='bb'||lesson==='adx'||lesson==='volume'||lesson==='atr'||lesson==='sr'){
+      ctx.lineWidth=1.5;ctx.strokeStyle='#d7a84c';line(ind.e7);ctx.strokeStyle='#6fa8dc';line(ind.e25);
+    }
+    if(lesson==='bb'){
+      const vals=slice.map((_,i)=>{let a=data.slice(Math.max(0,i-19),i+1),m=a.reduce((s,z)=>s+z.close,0)/a.length;let sd=Math.sqrt(a.reduce((s,z)=>s+(z.close-m)**2,0)/a.length);return {u:m+2*sd,l:m-2*sd}});
+      ctx.strokeStyle='rgba(215,168,76,.45)';ctx.lineWidth=1;line(vals.map(v=>v.u));line(vals.map(v=>v.l));
+    }
+    if(lesson==='sr'){
+      const level=slice[Math.max(2,Math.floor(slice.length*.62))].high;
+      ctx.strokeStyle='rgba(215,168,76,.8)';ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(pad.l,y(level));ctx.lineTo(W-pad.r,y(level));ctx.stroke();ctx.setLineDash([]);
+    }
+    if(lesson==='volume'){
+      const vh=65, base=H-pad.b-3;
+      slice.forEach((c,i)=>{let xx=x(i), h=Math.min(vh,c.volume/220*vh);ctx.fillStyle='rgba(120,135,155,.45)';ctx.fillRect(xx-candleW/2,base-h,candleW,h)});
+    }
+    if(hoverX!==null){ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(hoverX,pad.t);ctx.lineTo(hoverX,H-pad.b);ctx.stroke();ctx.setLineDash([])}
+  }
+
+  function update(){
+    const l=lessons[lesson], total=l.steps.length;
+    $('simTitle').textContent=l.title;
+    $('simStep').textContent=(step+1)+' / '+total;
+    const end=Math.min(data.length,18+step*16), i=end-1, d=ind;
+    $('simCandle').textContent='Vela '+end;
+    $('simPrice').textContent='US$ '+data[i].close.toFixed(2);
+    $('simRsi').textContent=d.rsi[i].toFixed(1);
+    $('simMacd').textContent=d.macd[i].toFixed(2);
+    $('simEma7').textContent=d.e7[i].toFixed(2);
+    $('simEma25').textContent=d.e25[i].toFixed(2);
+    $('simAdx').textContent=d.adx[i].toFixed(1);
+    $('simAtr').textContent=d.atr[i].toFixed(2);
+    $('lessonExplanation').innerHTML='<strong>'+l.steps[step][0]+':</strong> '+l.steps[step][1];
+    $('manualBody').innerHTML=l.manual.map(x=>'<div class="manual-point"><b>'+x[0]+'</b>'+x[1]+'</div>').join('');
+    $('challengeText').textContent=l.challenge;
+    $('challengeOptions').innerHTML=l.answers.map((a,j)=>'<button data-answer="'+a[1]+'">'+a[0]+'</button>').join('');
+    $('challengeResult').textContent='';
+    $('challengeOptions').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      $('challengeResult').textContent=b.dataset.answer==='right'?'✓ Correcto. La idea es no reaccionar a un indicador aislado, sino esperar contexto y confirmación.':'✕ No necesariamente. Volvé a mirar el contexto y la explicación de arriba.';
+      $('challengeResult').style.color=b.dataset.answer==='right'?'var(--up)':'var(--down)';
+    });
+    draw();
+  }
+
+  document.querySelectorAll('.lesson-tab').forEach(btn=>btn.onclick=()=>{
+    document.querySelectorAll('.lesson-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
+    lesson=btn.dataset.lesson;step=0;playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';update();
+  });
+  $('simBack').onclick=()=>{step=Math.max(0,step-1);update()};
+  $('simNext').onclick=()=>{step=Math.min(lessons[lesson].steps.length-1,step+1);update()};
+  $('resetSim').onclick=()=>{step=0;playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';update()};
+  $('playSim').onclick=()=>{
+    playing=!playing;
+    if(playing){
+      $('playSim').textContent='⏸ Pausar';
+      timer=setInterval(()=>{if(step>=lessons[lesson].steps.length-1){playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';return}step++;update()},Number($('simSpeed').value));
+    }else{clearInterval(timer);$('playSim').textContent='▶ Reproducir'}
+  };
+  $('simSpeed').onchange=()=>{if(playing){clearInterval(timer);$('playSim').click();$('playSim').click()}};
+  canvas.addEventListener('mousemove',e=>{
+    const r=canvas.getBoundingClientRect();hoverX=e.clientX-r.left;draw();
+    const sliceEnd=Math.min(data.length,18+step*16), idx=Math.round((hoverX-44)/(r.width-60)*Math.max(1,sliceEnd-1));
+    if(idx>=0&&idx<sliceEnd){const d=data[idx];$('chartTooltip').style.display='block';$('chartTooltip').style.left=Math.min(hoverX+10,r.width-150)+'px';$('chartTooltip').style.top='10px';$('chartTooltip').textContent='Vela '+(idx+1)+' · O '+d.open.toFixed(2)+' H '+d.high.toFixed(2)+' L '+d.low.toFixed(2)+' C '+d.close.toFixed(2)}
+  });
+  canvas.addEventListener('mouseleave',()=>{hoverX=null;$('chartTooltip').style.display='none';draw()});
+  window.addEventListener('resize',resize);
+  resize();update();
+})();
 
 function loadAllIndicators() { watchlist.forEach(loadIndicators); }
 loadAllIndicators();
