@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   :root{
     --bg:#14141a; --panel:#1c1c24; --panel-edge:#2a2a34;
@@ -121,12 +122,51 @@
   .demo-title,.setup-title{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.7px;color:var(--amber);font-weight:700}
   .demo-sub{font-size:10.5px;color:var(--ink-dim);margin-top:3px}
   .demo-reset{background:none;border:1px solid var(--panel-edge);color:var(--ink-dim);border-radius:6px;padding:5px 8px;font-size:10px;cursor:pointer}
-  .demo-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:12px}
+  .demo-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
   .demo-stats div{background:#18181f;border:1px solid var(--panel-edge);border-radius:7px;padding:8px}
   .demo-stats span{display:block;color:var(--ink-dim);font-size:9px}.demo-stats b{font-family:'IBM Plex Mono',monospace;font-size:12px}
   .demo-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
   .demo-controls label{font-size:10px;color:var(--ink-dim)}.demo-controls input{width:100%;margin-top:4px;background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;color:var(--ink);padding:7px}
   .demo-positions,.demo-history{margin-top:10px}.demo-pos,.history-row{padding:8px;border-top:1px solid var(--panel-edge);font-size:10.5px}
+  .demo-pos{display:flex;flex-direction:column;gap:6px}
+  .demo-pos-info{line-height:1.6}
+  .demo-pos-actions{display:flex;gap:6px}
+  .pos-btn{flex:1;border:1px solid var(--panel-edge);background:#18181f;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:7px 6px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+  .pos-btn:hover{border-color:var(--amber);color:var(--amber)}
+  .pos-btn.close-btn:hover{border-color:var(--down);color:var(--down)}
+  .tp1-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:10px;background:rgba(53,212,153,0.15);color:var(--up);margin-left:2px;vertical-align:middle;font-family:'IBM Plex Mono',monospace}
+  .trade-note{font-style:italic;color:var(--ink-dim);margin-top:3px;font-size:10px;line-height:1.4}
+
+  .perf-stats div b{font-size:11.5px}
+  .alerts-toggle{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:11px;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;cursor:pointer;user-select:none}
+  .alerts-toggle input{accent-color:var(--amber);width:14px;height:14px;cursor:pointer}
+  .equity-wrap{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .equity-wrap.open{max-height:220px;margin-top:10px}
+  .demo-export-row{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .demo-export-row .pos-btn{flex:1;min-width:104px;font-size:10px}
+  .import-label{display:flex}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,10,13,0.72);backdrop-filter:blur(2px);display:none;align-items:flex-end;justify-content:center;z-index:100;}
+  .modal-overlay.open{display:flex}
+  .modal-box{width:100%;max-width:520px;max-height:88vh;overflow-y:auto;background:var(--panel);border:1px solid var(--panel-edge);border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,16px) + 16px);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .modal-title{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;letter-spacing:0.5px}
+  .modal-title .side-tag{font-size:11px;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .modal-title .side-tag.LONG{color:var(--up);background:rgba(53,212,153,0.14)}
+  .modal-title .side-tag.SHORT{color:var(--down);background:rgba(255,92,114,0.14)}
+  .modal-close{background:none;border:1px solid var(--panel-edge);color:var(--ink-dim);border-radius:8px;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .modal-close:hover{color:var(--ink)}
+  .chart-wrap{position:relative;background:#18181f;border:1px solid var(--panel-edge);border-radius:10px;overflow:hidden;}
+  .chart-container{width:100%;height:300px;}
+  .chart-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+  .chart-legend{display:flex;gap:10px;flex-wrap:wrap;padding:8px 10px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink-dim);border-top:1px solid var(--panel-edge)}
+  .chart-legend span{display:flex;align-items:center;gap:4px}
+  .chart-legend i{width:12px;height:2px;display:inline-block}
+  .modal-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+  .modal-stats div{background:#18181f;border:1px solid var(--panel-edge);border-radius:7px;padding:8px 10px}
+  .modal-stats span{display:block;color:var(--ink-dim);font-size:9.5px}
+  .modal-stats b{font-family:'IBM Plex Mono',monospace;font-size:13px}
+  .modal-actions{margin-top:12px}
   .setup-card{margin-top:12px;padding:11px 12px;border:1px solid var(--panel-edge);border-radius:8px;background:#18181f}
   .setup-card.up{border-color:rgba(53,212,153,.45)}.setup-card.down{border-color:rgba(255,92,114,.45)}.setup-card.neutral{border-color:rgba(127,135,148,.4)}
   .setup-top{display:flex;justify-content:space-between}.setup-score{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-dim)}
@@ -136,45 +176,7 @@
   .setup-meta{font-size:10px;color:var(--ink-dim);line-height:1.45;margin-top:8px}
   .demo-trade-btn{width:100%;margin-top:9px;padding:9px;border:0;border-radius:7px;background:var(--amber);color:#1a1206;font-family:'IBM Plex Mono',monospace;font-weight:700;cursor:pointer}
   .demo-trade-btn:disabled{opacity:.35;cursor:not-allowed}
-  @media(max-width:430px){.demo-stats{grid-template-columns:1fr 1fr}}
-
-
-  .academy{margin-top:16px;background:#15151b;border:1px solid var(--panel-edge);border-radius:12px;overflow:hidden}
-  .academy-header{padding:17px 18px;background:#1d1d25;display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
-  .academy-kicker,.sim-label,.manual-title{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.8px;color:var(--amber);font-weight:700}
-  .academy-header h2{margin:5px 0 4px;font-size:18px;line-height:1.15}
-  .academy-header p{margin:0;color:var(--ink-dim);font-size:10.5px;max-width:700px;line-height:1.45}
-  .academy-badge{font-size:9px;color:var(--ink-dim);border:1px solid var(--panel-edge);border-radius:6px;padding:6px 8px;white-space:nowrap}
-  .lesson-tabs{display:flex;gap:5px;padding:9px 12px;background:#111116;border-bottom:1px solid var(--panel-edge);overflow-x:auto}
-  .lesson-tab{font:700 10px 'IBM Plex Mono',monospace;color:var(--ink-dim);background:#1b1b22;border:1px solid var(--panel-edge);border-radius:6px;padding:7px 10px;cursor:pointer;white-space:nowrap}
-  .lesson-tab.active{color:#17120a;background:var(--amber);border-color:var(--amber)}
-  .simulator{padding:12px}
-  .sim-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .sim-top strong{display:block;margin-top:3px;font:700 13px 'IBM Plex Mono',monospace}
-  .sim-actions{display:flex;align-items:center;gap:7px;font:10px 'IBM Plex Mono',monospace;color:var(--ink-dim)}
-  .sim-actions button,.sim-controls button{border:1px solid var(--panel-edge);background:#20202a;color:var(--ink);border-radius:6px;padding:6px 9px;cursor:pointer}
-  .sim-chart-wrap{position:relative;border:1px solid var(--panel-edge);border-radius:8px;background:#0e0e13;overflow:hidden}
-  #learningChart{display:block;width:100%;height:330px;cursor:crosshair}
-  .chart-tooltip{position:absolute;display:none;pointer-events:none;background:#20202a;border:1px solid var(--panel-edge);border-radius:5px;padding:5px 7px;font:9px 'IBM Plex Mono',monospace;color:var(--ink);white-space:nowrap}
-  .sim-controls{display:flex;align-items:center;gap:7px;margin-top:8px}
-  .sim-controls label{margin-left:auto;font-size:9px;color:var(--ink-dim)}
-  .sim-controls select{margin-left:4px;background:#20202a;color:var(--ink);border:1px solid var(--panel-edge);border-radius:5px;padding:5px}
-  .sim-readout{margin-top:9px;background:#1c1c24;border:1px solid var(--panel-edge);border-radius:8px;padding:9px}
-  .readout-main{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-  .readout-main span{font-size:9px;color:var(--ink-dim)}.readout-main b{font:700 13px 'IBM Plex Mono',monospace}
-  .readout-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
-  .readout-grid div{background:#16161c;border-radius:5px;padding:6px}.readout-grid small{display:block;font-size:8px;color:var(--ink-dim)}.readout-grid b{display:block;margin-top:2px;font:700 10px 'IBM Plex Mono',monospace}
-  .lesson-explanation{margin-top:9px;padding:11px;background:#20202a;border-left:3px solid var(--amber);border-radius:6px;color:var(--ink);font-size:10.5px;line-height:1.55}
-  .lesson-explanation strong{color:var(--amber)}
-  .manual-guide{margin:0 12px 12px;padding:12px;background:#1b1b22;border:1px solid var(--panel-edge);border-radius:8px}
-  .manual-body{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
-  .manual-point{padding:9px;background:#15151b;border:1px solid var(--panel-edge);border-radius:6px;font-size:9.7px;line-height:1.45;color:var(--ink-dim)}
-  .manual-point b{display:block;color:var(--ink);margin-bottom:3px}
-  .practice-card{margin:0 12px 12px;padding:12px;background:#20202a;border:1px solid var(--panel-edge);border-radius:8px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
-  .challenge-options{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-  .challenge-options button{font-size:9px;background:#18181f;color:var(--ink);border:1px solid var(--panel-edge);border-radius:5px;padding:6px 8px;cursor:pointer}
-  .challenge-result{grid-column:1/-1;font-size:9.5px;color:var(--ink-dim);min-height:15px}
-  @media(max-width:760px){.academy-header{display:block}.academy-badge{display:inline-block;margin-top:9px}.readout-grid{grid-template-columns:repeat(3,1fr)}.manual-body{grid-template-columns:1fr}.practice-card{grid-template-columns:1fr}.challenge-options{justify-content:flex-start}}
+  @media(max-width:400px){.demo-stats{grid-template-columns:1fr 1fr}}
 
 </style>
 </head>
@@ -202,93 +204,83 @@
   </div>
 
 
-
-
-  <section class="academy">
-    <div class="academy-header">
+  <section class="demo-panel" id="demoPanel">
+    <div class="demo-head">
       <div>
-        <div class="academy-kicker">MODO APRENDIZAJE · SIMULADOR INTERACTIVO</div>
-        <h2>Aprendé a leer un indicador viendo qué hace sobre el gráfico</h2>
-        <p>Elegí una lección. Vas a poder tocar el gráfico, mover el cursor, activar/desactivar indicadores y avanzar paso a paso.</p>
+        <div class="demo-title">SIMULADOR DEMO</div>
+        <div class="demo-sub">Trading virtual · sin dinero real</div>
       </div>
-      <div class="academy-badge">PRÁCTICA · SIN TRADES REALES</div>
+      <button class="demo-reset" id="demoReset">Reiniciar</button>
+    </div>
+    <div class="demo-stats">
+      <div><span>Saldo</span><b id="demoBalance">US$100.00</b></div>
+      <div><span>Equity</span><b id="demoEquity">US$100.00</b></div>
+      <div><span>PnL</span><b id="demoPnl">US$0.00</b></div>
+      <div><span>Trades</span><b id="demoTrades">0</b></div>
+    </div>
+    <div class="demo-stats perf-stats" id="perfStats">
+      <div><span>Win rate</span><b id="statWinRate">--</b></div>
+      <div><span>R promedio</span><b id="statAvgR">--</b></div>
+      <div><span>Racha</span><b id="statStreak">--</b></div>
+      <div><span>Comisiones</span><b id="statCommissions">US$0.00</b></div>
+    </div>
+    <div class="demo-controls">
+      <label>Riesgo %<input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1"></label>
+      <label>Apalancamiento<input id="leverage" type="number" min="1" max="20" step="1" value="3"></label>
+    </div>
+    <div class="demo-controls">
+      <label style="grid-column:1/-1">Nota del trade (opcional) <input id="tradeNote" type="text" placeholder="¿Por qué tomás este trade?" maxlength="200"></label>
+    </div>
+    <label class="alerts-toggle"><input type="checkbox" id="alertsToggle" checked> 🔔 Alertas de precio (sonido + notificación cerca de SL/TP)</label>
+
+    <button class="ind-toggle" id="equityToggle" style="margin-top:10px">
+      <span>📈 Curva de equity</span><span class="chev" id="equityChev">▾</span>
+    </button>
+    <div class="equity-wrap" id="equityWrap">
+      <div class="chart-container" id="equityChartContainer" style="height:180px"></div>
     </div>
 
-    <div class="lesson-tabs">
-      <button class="lesson-tab active" data-lesson="rsi">RSI</button>
-      <button class="lesson-tab" data-lesson="macd">MACD</button>
-      <button class="lesson-tab" data-lesson="ema">EMA</button>
-      <button class="lesson-tab" data-lesson="bb">BOLLINGER</button>
-      <button class="lesson-tab" data-lesson="adx">ADX</button>
-      <button class="lesson-tab" data-lesson="volume">VOLUMEN</button>
-      <button class="lesson-tab" data-lesson="atr">ATR</button>
-      <button class="lesson-tab" data-lesson="sr">S/R</button>
-    </div>
+    <div id="demoPositions" class="demo-positions"></div>
+    <div id="demoHistory" class="demo-history"></div>
 
-    <div class="simulator">
-      <div class="sim-top">
-        <div>
-          <span class="sim-label">SIMULACIÓN</span>
-          <strong id="simTitle">RSI · Momentum</strong>
-        </div>
-        <div class="sim-actions">
-          <button id="simBack">←</button>
-          <span id="simStep">1 / 4</span>
-          <button id="simNext">→</button>
-        </div>
-      </div>
-
-      <div class="sim-chart-wrap">
-        <canvas id="learningChart" height="330"></canvas>
-        <div class="chart-tooltip" id="chartTooltip"></div>
-      </div>
-
-      <div class="sim-controls">
-        <button id="playSim">▶ Reproducir</button>
-        <button id="resetSim">↺ Reiniciar</button>
-        <label>Velocidad
-          <select id="simSpeed">
-            <option value="1400">Lenta</option>
-            <option value="800" selected>Normal</option>
-            <option value="400">Rápida</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="sim-readout">
-        <div class="readout-main">
-          <span id="simCandle">Vela 1</span>
-          <b id="simPrice">US$ 100.00</b>
-        </div>
-        <div class="readout-grid">
-          <div><small>RSI</small><b id="simRsi">50</b></div>
-          <div><small>MACD</small><b id="simMacd">0.00</b></div>
-          <div><small>EMA 7</small><b id="simEma7">100.00</b></div>
-          <div><small>EMA 25</small><b id="simEma25">100.00</b></div>
-          <div><small>ADX</small><b id="simAdx">18</b></div>
-          <div><small>ATR</small><b id="simAtr">1.20</b></div>
-        </div>
-      </div>
-
-      <div class="lesson-explanation" id="lessonExplanation"></div>
-    </div>
-
-    <div class="manual-guide">
-      <div class="manual-title">LECTURA MANUAL · PASO A PASO</div>
-      <div class="manual-body" id="manualBody"></div>
-    </div>
-
-    <div class="practice-card">
-      <div>
-        <div class="manual-title">MINI DESAFÍO</div>
-        <div id="challengeText">Antes de avanzar, mirá el gráfico: ¿qué está haciendo el RSI?</div>
-      </div>
-      <div class="challenge-options" id="challengeOptions"></div>
-      <div class="challenge-result" id="challengeResult"></div>
+    <div class="demo-export-row">
+      <button class="pos-btn" id="exportCsvBtn">⬇ CSV</button>
+      <button class="pos-btn" id="exportBackupBtn">⬇ Backup</button>
+      <label class="pos-btn import-label" for="importBackupInput">⬆ Importar</label>
+      <input type="file" id="importBackupInput" accept="application/json" style="display:none">
     </div>
   </section>
 
   <div class="board" id="board"></div>
+
+  <div class="modal-overlay" id="posModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title" id="modalTitle">--</div>
+        <button class="modal-close" id="modalCloseBtn">×</button>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-container" id="chartContainer"></div>
+        <div class="chart-loading" id="chartLoading">Cargando gráfico…</div>
+      </div>
+      <div class="chart-legend">
+        <span><i style="background:var(--amber)"></i> Entrada</span>
+        <span><i style="background:var(--down)"></i> Stop Loss</span>
+        <span><i style="background:var(--up);opacity:.6"></i> TP1</span>
+        <span><i style="background:var(--up)"></i> TP2</span>
+      </div>
+      <div class="modal-stats">
+        <div><span>Entrada</span><b id="mEntry">--</b></div>
+        <div><span>Actual</span><b id="mCurrent">--</b></div>
+        <div><span>SL</span><b id="mSl" style="color:var(--down)">--</b></div>
+        <div><span>TP2</span><b id="mTp" style="color:var(--up)">--</b></div>
+        <div><span>Cantidad</span><b id="mQty">--</b></div>
+        <div><span>PnL</span><b id="mPnl">--</b></div>
+      </div>
+      <div class="trade-note" id="mNote" style="margin-top:8px"></div>
+      <button class="demo-trade-btn pos-btn close-btn" id="modalCloseTradeBtn" style="margin-top:12px;border:1px solid var(--panel-edge);background:none;color:var(--down)">✕ Cerrar posición al precio actual</button>
+    </div>
+  </div>
 
   <footer>
     Datos de mercado de Binance. Precio en vivo; indicadores según la temporalidad elegida.<br>
@@ -307,10 +299,340 @@ let watchlist = [
   { sym: 'solusdt', symbol: 'SOLUSDT', label: 'SOL' }
 ];
 
+/* Variables de las mejoras nuevas, declaradas bien arriba a propósito:
+   varias funciones que corren temprano (renderDemo(), buildRow, etc.) las
+   pueden llegar a usar, y si están declaradas más abajo con const/let
+   revienta todo con un ReferenceError (ya nos pasó una vez con posModal). */
+const COMMISSION_RATE = 0.001; // 0.1% por lado, similar a Binance spot
+let alertsEnabled = localStorage.getItem('alertsEnabled') !== '0';
+let equityCurve = JSON.parse(localStorage.getItem('demoEquityCurve') || '[]');
+let equityChart = null, equitySeries = null;
+
 const state = {};
 const dot = document.getElementById('dot');
 const statusText = document.getElementById('statusText');
 const board = document.getElementById('board');
+
+/* ---------- MODAL: GRÁFICO DE POSICIÓN + CIERRE MANUAL ---------- */
+/* Este bloque va temprano en el script a propósito: define funciones y el
+   const posModal ANTES de que renderDemo() se ejecute por primera vez más abajo.
+   Si se declara más tarde, renderDemo() intenta usar posModal antes de que
+   exista (TDZ) y tira un ReferenceError que frena el resto del script. */
+let modalPositionId = null;
+let activeChart = null, activeSeries = null, activeCurrentPriceLine = null;
+const posModal = document.getElementById('posModal');
+
+function findPosition(id){ return demo.positions.find(x => String(x.id) === String(id)); }
+
+function closePositionManually(id){
+  const p = findPosition(id);
+  if (!p) return;
+  const st = state[p.sym];
+  const price = st?.last ?? p.entry;
+  const note = prompt(`Cerrar ${p.symbol} ${p.side} al precio actual (${fmt(price, autoDecimals(price))}).\nNota opcional (dejar vacío y aceptar para cerrar sin nota; Cancelar para no cerrar):`, '');
+  if (note === null) return;
+  closeDemoPosition(p, price, 'MANUAL', note.trim().slice(0, 200));
+  saveDemo();
+  closeModal();
+}
+
+function updateModalStats(){
+  if (!modalPositionId || !posModal.classList.contains('open')) return;
+  const p = findPosition(modalPositionId);
+  if (!p) { closeModal(); return; }
+  const st = state[p.sym];
+  const current = st?.last ?? p.entry;
+  const diff = p.side === 'LONG' ? current - p.entry : p.entry - current;
+  const posPnl = diff * p.qty;
+  document.getElementById('mEntry').textContent = fmt(p.entry, autoDecimals(p.entry));
+  document.getElementById('mCurrent').textContent = fmt(current, autoDecimals(current));
+  document.getElementById('mSl').textContent = fmt(p.sl, autoDecimals(p.sl));
+  document.getElementById('mTp').textContent = fmt(p.tp2, autoDecimals(p.tp2));
+  document.getElementById('mQty').textContent = p.qty.toFixed(6);
+  const pnlEl = document.getElementById('mPnl');
+  pnlEl.textContent = (posPnl >= 0 ? '+' : '') + money(posPnl);
+  pnlEl.style.color = posPnl >= 0 ? 'var(--up)' : 'var(--down)';
+  const noteEl = document.getElementById('mNote');
+  if (noteEl) {
+    let noteHtml = '';
+    if (p.tp1Hit) noteHtml += '<span class="tp1-badge">TP1 alcanzado · 50% cerrado · SL en breakeven</span>';
+    if (p.noteEntry) noteHtml += `<div>📝 ${escapeHtml(p.noteEntry)}</div>`;
+    noteEl.innerHTML = noteHtml;
+  }
+  if (activeCurrentPriceLine) {
+    activeCurrentPriceLine.applyOptions({ price: current });
+  }
+}
+
+function closeModal(){
+  posModal.classList.remove('open');
+  modalPositionId = null;
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+}
+
+async function openPositionChart(id){
+  const p = findPosition(id);
+  if (!p) return;
+  modalPositionId = id;
+  posModal.classList.add('open');
+  document.getElementById('modalTitle').innerHTML = `${p.symbol} <span class="side-tag ${p.side}">${p.side}</span>`;
+  document.getElementById('chartLoading').style.display = 'flex';
+  document.getElementById('chartLoading').textContent = 'Cargando gráfico…';
+  updateModalStats();
+
+  const container = document.getElementById('chartContainer');
+  container.innerHTML = '';
+  if (activeChart) { activeChart.remove(); activeChart = null; activeSeries = null; activeCurrentPriceLine = null; }
+
+  if (typeof LightweightCharts === 'undefined') {
+    document.getElementById('chartLoading').textContent = 'No se pudo cargar la librería de gráficos (revisá tu conexión).';
+    return;
+  }
+
+  try {
+    const limit = 150;
+    const klines = await fetchJson([
+      `https://data-api.binance.vision/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`,
+      `https://api.binance.com/api/v3/klines?symbol=${p.symbol}&interval=${currentInterval}&limit=${limit}`
+    ]);
+    if (modalPositionId !== id) return; // el usuario cerró el modal mientras cargaba
+
+    const candles = klines.map(k => ({
+      time: Math.floor(k[0] / 1000),
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4])
+    }));
+
+    const chart = LightweightCharts.createChart(container, {
+      width: container.clientWidth,
+      height: 300,
+      layout: { background: { color: 'transparent' }, textColor: '#8b8a94', fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+      grid: { vertLines: { color: '#2a2a34' }, horzLines: { color: '#2a2a34' } },
+      rightPriceScale: { borderColor: '#2a2a34' },
+      timeScale: { borderColor: '#2a2a34', timeVisible: true, secondsVisible: false },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
+    });
+    const series = chart.addCandlestickSeries({
+      upColor: '#35d499', downColor: '#ff5c72', borderVisible: false,
+      wickUpColor: '#35d499', wickDownColor: '#ff5c72'
+    });
+    series.setData(candles);
+
+    series.createPriceLine({ price: p.entry, color: '#f2a93b', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'Entrada' });
+    series.createPriceLine({ price: p.sl, color: '#ff5c72', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'SL' });
+    if (p.tp1) series.createPriceLine({ price: p.tp1, color: '#35d499', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, axisLabelVisible: true, title: 'TP1' });
+    series.createPriceLine({ price: p.tp2, color: '#35d499', lineWidth: 2, lineStyle: LightweightCharts.LineStyle.Dashed, axisLabelVisible: true, title: 'TP2' });
+
+    const liveCurrent = state[p.sym]?.last ?? candles[candles.length - 1].close;
+    activeCurrentPriceLine = series.createPriceLine({ price: liveCurrent, color: '#eae7df', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Solid, axisLabelVisible: true, title: 'Actual' });
+
+    chart.timeScale().fitContent();
+    activeChart = chart;
+    activeSeries = series;
+    document.getElementById('chartLoading').style.display = 'none';
+
+    const resizeObs = new ResizeObserver(() => {
+      if (activeChart) activeChart.applyOptions({ width: container.clientWidth });
+    });
+    resizeObs.observe(container);
+  } catch (e) {
+    console.error('Error cargando gráfico:', e);
+    document.getElementById('chartLoading').textContent = 'No se pudo cargar el gráfico. Probá de nuevo.';
+  }
+}
+
+document.getElementById('demoPositions').addEventListener('click', (e) => {
+  const chartBtn = e.target.closest('[data-chart]');
+  if (chartBtn) { openPositionChart(chartBtn.dataset.chart); return; }
+  const closeBtn = e.target.closest('[data-close]');
+  if (closeBtn) { closePositionManually(closeBtn.dataset.close); return; }
+});
+document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+posModal.addEventListener('click', (e) => { if (e.target === posModal) closeModal(); });
+document.getElementById('modalCloseTradeBtn').addEventListener('click', () => {
+  if (modalPositionId) closePositionManually(modalPositionId);
+});
+
+/* ---------- MEJORAS: SEGURIDAD DE TEXTO, ALERTAS, ESTADÍSTICAS, EQUITY, EXPORT/IMPORT ---------- */
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function playBeep(freq, duration){
+  try{
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration / 1000);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration / 1000 + 0.02);
+    setTimeout(() => ctx.close().catch(()=>{}), duration + 150);
+  } catch(e) {}
+}
+
+function notify(title, body){
+  if (!alertsEnabled) return;
+  if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+    try { new Notification(title, { body }); } catch(e) {}
+  }
+}
+
+function checkPriceAlerts(p, price){
+  if (!alertsEnabled || !price) return;
+  const THRESH = 0.003; // 0.3% de distancia
+  const distToSL = Math.abs(price - p.sl) / price;
+  const distToTP = Math.abs(price - p.tp2) / price;
+  if (!p.alertedSL && distToSL <= THRESH) {
+    p.alertedSL = true;
+    playBeep(440, 160);
+    notify('⚠️ Precio cerca del SL', `${p.symbol} ${p.side} se está acercando al stop loss.`);
+  }
+  if (!p.alertedTP && distToTP <= THRESH) {
+    p.alertedTP = true;
+    playBeep(880, 160);
+    notify('🎯 Precio cerca del TP', `${p.symbol} ${p.side} se está acercando al take profit.`);
+  }
+}
+
+function computeStats(){
+  const h = demo.history;
+  if (!h.length) return { count: 0, winRate: 0, avgR: 0, streak: 0, streakType: null, totalCommission: 0 };
+  let wins = 0, totalCommission = 0;
+  const rMultiples = [];
+  h.forEach(x => {
+    if (x.result > 0) wins++;
+    totalCommission += (x.commission || 0);
+    if (x.riskCash) rMultiples.push(x.result / x.riskCash);
+  });
+  const winRate = (wins / h.length) * 100;
+  const avgR = rMultiples.length ? rMultiples.reduce((a,b) => a+b, 0) / rMultiples.length : 0;
+  let streak = 0, streakType = null;
+  for (let i = h.length - 1; i >= 0; i--) {
+    const isWin = h[i].result > 0;
+    if (streakType === null) { streakType = isWin ? 'win' : 'loss'; streak = 1; }
+    else if ((isWin && streakType === 'win') || (!isWin && streakType === 'loss')) streak++;
+    else break;
+  }
+  return { count: h.length, winRate, avgR, streak, streakType, totalCommission };
+}
+
+function pushEquityPoint(){
+  const point = { time: Math.floor(Date.now() / 1000), value: Number(demo.balance.toFixed(4)) };
+  if (equityCurve.length && equityCurve[equityCurve.length - 1].time >= point.time) {
+    point.time = equityCurve[equityCurve.length - 1].time + 1;
+  }
+  equityCurve.push(point);
+  if (equityCurve.length > 500) equityCurve = equityCurve.slice(-500);
+  localStorage.setItem('demoEquityCurve', JSON.stringify(equityCurve));
+  renderEquityChart();
+}
+
+function renderEquityChart(){
+  const wrap = document.getElementById('equityWrap');
+  const container = document.getElementById('equityChartContainer');
+  if (!wrap || !container || !wrap.classList.contains('open')) return; // solo si está visible
+  if (typeof LightweightCharts === 'undefined') { container.textContent = 'No se pudo cargar la librería de gráficos.'; return; }
+  if (!equityChart) {
+    equityChart = LightweightCharts.createChart(container, {
+      width: container.clientWidth, height: 180,
+      layout: { background: { color: 'transparent' }, textColor: '#8b8a94', fontFamily: "'IBM Plex Mono', monospace", fontSize: 10 },
+      grid: { vertLines: { color: '#2a2a34' }, horzLines: { color: '#2a2a34' } },
+      rightPriceScale: { borderColor: '#2a2a34' },
+      timeScale: { borderColor: '#2a2a34', timeVisible: true, secondsVisible: false }
+    });
+    equitySeries = equityChart.addAreaSeries({ lineColor: '#f2a93b', topColor: 'rgba(242,169,59,0.35)', bottomColor: 'rgba(242,169,59,0.02)', lineWidth: 2 });
+    new ResizeObserver(() => { if (equityChart) equityChart.applyOptions({ width: container.clientWidth }); }).observe(container);
+  }
+  const data = equityCurve.length ? equityCurve : [{ time: Math.floor(Date.now()/1000), value: demo.balance }];
+  equitySeries.setData(data);
+  equityChart.timeScale().fitContent();
+}
+
+document.getElementById('equityToggle').addEventListener('click', () => {
+  const wrap = document.getElementById('equityWrap');
+  const chev = document.getElementById('equityChev');
+  wrap.classList.toggle('open');
+  chev.classList.toggle('open');
+  if (wrap.classList.contains('open')) renderEquityChart();
+});
+
+document.getElementById('alertsToggle').addEventListener('change', (e) => {
+  alertsEnabled = e.target.checked;
+  localStorage.setItem('alertsEnabled', alertsEnabled ? '1' : '0');
+  if (alertsEnabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+});
+
+function downloadBlob(content, filename, type){
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportHistoryCSV(){
+  if (!demo.history.length) return alert('Todavía no hay operaciones cerradas para exportar.');
+  const rows = [['Fecha','Símbolo','Lado','Entrada','Salida','Cantidad','Resultado','Comisión','Motivo','Nota entrada','Nota salida']];
+  demo.history.forEach(h => {
+    rows.push([
+      new Date(h.time).toLocaleString('es-AR'), h.symbol, h.side, h.entry, h.exit, h.qty,
+      (h.result || 0).toFixed(2), (h.commission || 0).toFixed(4), h.reason, h.noteEntry || '', h.exitNote || ''
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  downloadBlob(csv, `historial_trading_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+}
+
+function exportBackup(){
+  const backup = { demoBalance: demo.balance, demoStart: demo.start, demoPositions: demo.positions, demoHistory: demo.history, demoEquityCurve: equityCurve, exportedAt: Date.now() };
+  downloadBlob(JSON.stringify(backup, null, 2), `backup_trading_${Date.now()}.json`, 'application/json');
+}
+
+function importBackup(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (typeof data.demoBalance !== 'number' || !Array.isArray(data.demoPositions) || !Array.isArray(data.demoHistory)) {
+        throw new Error('el archivo no tiene el formato esperado');
+      }
+      if (!confirm('Esto reemplaza tus datos demo actuales por los del backup. ¿Continuar?')) return;
+      demo.balance = data.demoBalance;
+      demo.start = typeof data.demoStart === 'number' ? data.demoStart : 100;
+      demo.positions = data.demoPositions;
+      demo.history = data.demoHistory;
+      equityCurve = Array.isArray(data.demoEquityCurve) ? data.demoEquityCurve : [];
+      localStorage.setItem('demoEquityCurve', JSON.stringify(equityCurve));
+      saveDemo();
+      renderEquityChart();
+      alert('Backup importado correctamente.');
+    } catch (e) {
+      alert('No se pudo importar el backup: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', exportHistoryCSV);
+document.getElementById('exportBackupBtn').addEventListener('click', exportBackup);
+document.getElementById('importBackupInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) importBackup(file);
+  e.target.value = '';
+});
 
 function autoDecimals(price){
   const p = Math.abs(price);
@@ -349,6 +671,8 @@ function buildRow(coin){
     </div>
 
     <div class="trend-badge neutral" id="trend-${coin.sym}"><span>Calculando estado de tendencia…</span></div>
+    <div class="setup-card neutral" id="setup-${coin.sym}">
+      <div class="setup-top"><span class="setup-title">SETUP / SUGERENCIA</span><span class="setup-score" id="score-${coin.sym}">--/100</span></div>
       <div class="setup-main" id="setupMain-${coin.sym}">Analizando mercado…</div>
       <div class="setup-grid">
         <div>Entrada <b id="entry-${coin.sym}">--</b></div>
@@ -479,6 +803,7 @@ function updateCoin(coin, t) {
   const previous = state[coin.sym]?.last;
   const direction = previous == null ? null : last > previous ? 'up' : last < previous ? 'down' : null;
   state[coin.sym] = { ...(state[coin.sym] || {}), last, pct, high, low };
+  if (typeof demo !== 'undefined') renderDemo();
 
   const priceEl = document.getElementById('price-' + coin.sym);
   const chgEl = document.getElementById('chg-' + coin.sym);
@@ -798,6 +1123,7 @@ async function loadIndicators(coin) {
 
     const atrVal = atrCalc(highs, lows, closes, 14);
     const atrPct = (atrVal / lastClose) * 100;
+    makeSetup(coin, { lastClose, highs, lows, closes, volumes, up, down, neutral, r, m, adxRes, atrVal, bb, ma7, ma25, lastCandleUp, volRatio });
     const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.` };
 
     const bandState = lastClose >= bb.upper ? 'upper' : lastClose <= bb.lower ? 'lower' : 'inside';
@@ -832,304 +1158,200 @@ async function loadIndicators(coin) {
 }
 
 
+/* ---------- DEMO + MOTOR DE SETUPS ---------- */
+const demo = {
+  balance: Number(localStorage.getItem('demoBalance') || 100),
+  start: Number(localStorage.getItem('demoStart') || 100),
+  positions: JSON.parse(localStorage.getItem('demoPositions') || '[]'),
+  history: JSON.parse(localStorage.getItem('demoHistory') || '[]')
+};
 
-/* ---------- ACADEMIA INTERACTIVA ---------- */
-(function(){
-  const lessons = {
-    rsi:{
-      title:'RSI · Momentum',
-      steps:[
-        ['Qué estás viendo','El RSI se mueve entre 0 y 100. En esta simulación el precio cae y después rebota. Mirá cómo el RSI acompaña ese cambio de momentum.'],
-        ['Zona baja','Cuando el RSI entra debajo de 30 hablamos de una zona de sobreventa relativa. Eso NO significa que haya que comprar inmediatamente.'],
-        ['El rebote','Esperá a que el RSI empiece a recuperar fuerza y buscá confirmación en precio: soporte, estructura o una vela de rechazo.'],
-        ['Cómo lo usarías','Pensá el RSI como una pieza del rompecabezas: primero contexto y estructura; después usalo para evaluar momentum y timing.']
-      ],
-      metric:'rsi',
-      manual:[
-        ['1 · Mirá el número','30 y 70 son referencias, no paredes. En tendencia fuerte el RSI puede permanecer mucho tiempo en zonas extremas.'],
-        ['2 · Mirá la dirección','RSI subiendo = momentum alcista mejorando; bajando = momentum debilitándose.'],
-        ['3 · Compará con el precio','Una divergencia puede ser útil: precio hace nuevo máximo pero RSI no, por ejemplo. No es señal garantizada.'],
-        ['4 · Confirmá','Nunca uses “RSI 70 = SHORT” o “RSI 30 = LONG” como regla única.']
-      ],
-      challenge:'El RSI acaba de caer a 27 y el precio todavía está bajando. ¿Qué harías?',
-      answers:[
-        ['Comprar ya','wrong'],
-        ['Esperar confirmación','right'],
-        ['Vender porque está bajo','wrong']
-      ]
-    },
-    macd:{
-      title:'MACD · Momentum + tendencia',
-      steps:[
-        ['Qué estás viendo','El MACD compara medias para mostrar cambios de momentum. La línea de señal ayuda a visualizar cruces y el histograma muestra la distancia entre ambas.'],
-        ['Momentum negativo','Mientras el histograma es negativo, el momentum favorece la parte bajista. Observá qué pasa cuando empieza a reducirse.'],
-        ['Cambio','Cuando el histograma pasa hacia positivo y el MACD cruza la señal, el momentum alcista está ganando fuerza.'],
-        ['Cómo lo usarías','Usalo como confirmación de una idea que ya tenga estructura y nivel de precio.']
-      ],
-      metric:'macd',
-      manual:[
-        ['1 · Histograma','Negativo = momentum bajista; positivo = momentum alcista.'],
-        ['2 · Cruces','Cruce alcista puede señalar recuperación de momentum; bajista, pérdida de fuerza.'],
-        ['3 · Cero','La relación con la línea cero ayuda a entender el contexto de tendencia.'],
-        ['4 · Confirmá con precio','Un cruce sin nivel de entrada, SL y estructura no es un trade completo.']
-      ],
-      challenge:'El MACD cruza al alza, pero el precio está justo debajo de una resistencia fuerte. ¿Qué hacés?',
-      answers:[['Entrar sin mirar','wrong'],['Esperar confirmación/ruptura','right'],['Short automático','wrong']]
-    },
-    ema:{
-      title:'EMA 7 / 25 · Dirección',
-      steps:[
-        ['Qué estás viendo','Las EMA suavizan el precio. La 7 reacciona más rápido y la 25 más lento.'],
-        ['Tendencia alcista','Cuando EMA 7 está sobre EMA 25 y ambas apuntan hacia arriba, el sesgo es alcista.'],
-        ['Retroceso','El precio puede volver hacia las medias sin que la tendencia termine. Eso puede ser una zona para estudiar, no una entrada automática.'],
-        ['Cómo lo usarías','Definí primero la dirección. Después buscá estructura y una zona donde el riesgo tenga sentido.']
-      ],
-      metric:'ema',
-      manual:[
-        ['1 · Relación','7 sobre 25 favorece sesgo alcista; 7 debajo de 25 favorece sesgo bajista.'],
-        ['2 · Pendiente','Dos medias ascendiendo cuentan más que un simple cruce aislado.'],
-        ['3 · Precio','Precio sobre las dos = mayor fortaleza; debajo = mayor debilidad.'],
-        ['4 · No persigas','Después de un movimiento muy extendido, esperar retroceso puede ser mejor que entrar tarde.']
-      ],
-      challenge:'EMA 7 está sobre EMA 25, pero ambas están planas y el precio rebota entre soporte y resistencia. ¿Tendencia fuerte?',
-      answers:[['Sí, seguro','wrong'],['No necesariamente; puede ser rango','right'],['Short automático','wrong']]
-    },
-    bb:{
-      title:'Bollinger Bands · Volatilidad',
-      steps:[
-        ['Qué estás viendo','Las bandas rodean una media y se expanden o contraen según la volatilidad.'],
-        ['Compresión','Cuando las bandas se estrechan, el mercado está comprimido. Puede preceder un movimiento, pero no dice hacia dónde.'],
-        ['Expansión','Cuando se expanden y el precio rompe una zona, mirá volumen y estructura para decidir si la ruptura tiene fuerza.'],
-        ['Cómo lo usarías','No vendas simplemente porque el precio toca la banda superior. En tendencias fuertes puede caminar por ella.']
-      ],
-      metric:'bb',
-      manual:[
-        ['1 · Amplitud','Bandas estrechas = poca volatilidad relativa; anchas = mayor volatilidad.'],
-        ['2 · Posición','Precio cerca de una banda indica posición extrema relativa, no reversión garantizada.'],
-        ['3 · Squeeze','Una compresión merece atención porque puede terminar en expansión.'],
-        ['4 · Confirmá','Ruptura + volumen + estructura es mucho más útil que “tocó banda”.']
-      ],
-      challenge:'El precio toca la banda superior mientras la EMA 7 y 25 suben con fuerza. ¿SHORT automático?',
-      answers:[['Sí','wrong'],['No; puede seguir la tendencia','right'],['Cerrar todo','wrong']]
-    },
-    adx:{
-      title:'ADX + DI · Fuerza',
-      steps:[
-        ['Qué estás viendo','ADX intenta medir fuerza de tendencia. +DI y −DI ayudan a ver qué lado domina.'],
-        ['Rango','ADX bajo suele acompañar mercados sin una tendencia fuerte. En ese escenario perseguir rupturas puede ser peligroso.'],
-        ['Tendencia','Cuando ADX sube y un DI domina, hay mayor evidencia de movimiento con dirección.'],
-        ['Cómo lo usarías','Primero preguntá “¿hay tendencia?”. Después decidí si tu estrategia debería buscar continuación o trabajar un rango.']
-      ],
-      metric:'adx',
-      manual:[
-        ['1 · ADX','No dice LONG o SHORT. Dice cuánta fuerza tiene el movimiento.'],
-        ['2 · +DI / −DI','+DI dominante favorece sesgo alcista; −DI dominante favorece bajista.'],
-        ['3 · ADX subiendo','La tendencia está ganando fuerza.'],
-        ['4 · ADX bajo','Pensá en rango, paciencia y niveles antes que en perseguir movimientos.']
-      ],
-      challenge:'ADX está en 14 y el precio oscila entre soporte y resistencia. ¿Qué contexto parece más probable?',
-      answers:[['Tendencia fortísima','wrong'],['Rango / poca fuerza','right'],['Comprar siempre','wrong']]
-    },
-    volume:{
-      title:'Volumen · Participación',
-      steps:[
-        ['Qué estás viendo','El volumen muestra cuánta actividad hubo en cada vela. En la simulación aparece un pico durante una ruptura.'],
-        ['Movimiento sin volumen','Una ruptura con poco volumen puede tener menos convicción y mayor riesgo de fallo.'],
-        ['Confirmación','Si precio rompe una resistencia y el volumen aumenta claramente, la ruptura merece más atención.'],
-        ['Cuidado','Volumen alto también aparece en liquidaciones o capitulación. Dirección y contexto siguen siendo necesarios.']
-      ],
-      metric:'volume',
-      manual:[
-        ['1 · Compará','No mires un volumen aislado: comparalo con las velas anteriores.'],
-        ['2 · Rupturas','Una ruptura acompañada de participación suele ser más convincente.'],
-        ['3 · Dirección','Volumen no significa “compradores”; muestra actividad. Mirá la vela y el nivel.'],
-        ['4 · Confirmá','Usalo junto con estructura, soporte/resistencia y momentum.']
-      ],
-      challenge:'La resistencia rompe pero el volumen es igual o menor al promedio. ¿Qué conclusión es prudente?',
-      answers:[['Ruptura confirmada','wrong'],['Esperar confirmación','right'],['SHORT inmediato','wrong']]
-    },
-    atr:{
-      title:'ATR · Volatilidad',
-      steps:[
-        ['Qué estás viendo','ATR estima el rango verdadero promedio. Acá aumenta cuando las velas empiezan a ser más grandes.'],
-        ['ATR bajo','Mercado relativamente tranquilo. Un stop muy ajustado puede ser suficiente o no, dependiendo de la estructura.'],
-        ['ATR alto','Hay más movimiento. Un stop demasiado cercano puede quedar dentro del ruido normal.'],
-        ['Cómo lo usarías','ATR ayuda a adaptar SL y tamaño de posición. No te dice la dirección.']
-      ],
-      metric:'atr',
-      manual:[
-        ['1 · Volatilidad','ATR alto = más movimiento; bajo = menos movimiento.'],
-        ['2 · Stop','No pongas un SL arbitrariamente cerca si el ruido normal del activo es mayor.'],
-        ['3 · Tamaño','Si ampliás el SL, reducí el tamaño de posición para mantener el riesgo.'],
-        ['4 · Dirección','ATR jamás te dice por sí solo LONG o SHORT.']
-      ],
-      challenge:'Tu stop está a US$0,20 pero el ATR del activo es US$1,50. ¿Qué deberías revisar?',
-      answers:[['Nada','wrong'],['Si el stop está demasiado cerca del ruido normal','right'],['Subir apalancamiento','wrong']]
-    },
-    sr:{
-      title:'Soporte / Resistencia · Estructura',
-      steps:[
-        ['Qué estás viendo','El gráfico muestra zonas donde el precio reaccionó varias veces. No son líneas mágicas: son áreas.'],
-        ['Soporte','Cuando el precio cae hacia una zona donde antes apareció demanda, estudiás si vuelve a reaccionar.'],
-        ['Resistencia','Cuando sube hacia una zona donde antes apareció oferta, estudiás si rechaza o rompe.'],
-        ['Cómo lo usarías','Son fundamentales para definir entrada, invalidación y objetivos antes de abrir una posición.']
-      ],
-      metric:'sr',
-      manual:[
-        ['1 · Marcá zonas','Buscá máximos y mínimos relevantes, no cada pequeña vela.'],
-        ['2 · Reacción','Cuantas más reacciones relevantes, más atención merece la zona.'],
-        ['3 · Ruptura','Una resistencia rota puede convertirse en soporte, pero esperá confirmación.'],
-        ['4 · R:R','Usá niveles para calcular si el objetivo justifica el riesgo.']
-      ],
-      challenge:'Querés LONG justo debajo de una resistencia muy cercana. ¿Qué deberías calcular antes?',
-      answers:[['Nada','wrong'],['R:R y espacio hasta la resistencia','right'],['Solo RSI','wrong']]
+function saveDemo(){
+  localStorage.setItem('demoBalance', demo.balance);
+  localStorage.setItem('demoStart', demo.start);
+  localStorage.setItem('demoPositions', JSON.stringify(demo.positions));
+  localStorage.setItem('demoHistory', JSON.stringify(demo.history));
+  renderDemo();
+}
+
+function money(n){ return 'US$' + Number(n).toFixed(2); }
+renderDemo();
+
+function renderDemo(){
+  const floating = demo.positions.reduce((s,p)=>{
+    const st = state[p.sym];
+    if(!st) return s;
+    const diff = p.side === 'LONG' ? st.last-p.entry : p.entry-st.last;
+    return s + diff*p.qty;
+  },0);
+  const pnl = demo.balance-demo.start;
+  document.getElementById('demoBalance').textContent=money(demo.balance);
+  document.getElementById('demoEquity').textContent=money(demo.balance+floating);
+  const pnlEl=document.getElementById('demoPnl'); pnlEl.textContent=(pnl>=0?'+':'')+money(pnl);
+  pnlEl.style.color=pnl>=0?'var(--up)':'var(--down)';
+  document.getElementById('demoTrades').textContent=demo.history.length;
+  const stats = computeStats();
+  document.getElementById('statWinRate').textContent = stats.count ? stats.winRate.toFixed(0)+'%' : '--';
+  document.getElementById('statAvgR').textContent = stats.count ? (stats.avgR>=0?'+':'')+stats.avgR.toFixed(2)+'R' : '--';
+  const streakEl = document.getElementById('statStreak');
+  streakEl.textContent = stats.count ? stats.streak + (stats.streakType==='win' ? ' 🟢' : ' 🔴') : '--';
+  document.getElementById('statCommissions').textContent = money(stats.totalCommission);
+  document.getElementById('demoPositions').innerHTML=demo.positions.length
+    ? demo.positions.map(p=>{
+        const st=state[p.sym];
+        const current=st?.last ?? p.entry;
+        const diff=p.side==='LONG' ? current-p.entry : p.entry-current;
+        const posPnl=diff*p.qty;
+        const cls=posPnl>=0?'var(--up)':'var(--down)';
+        return `<div class="demo-pos">
+          <div class="demo-pos-info">
+            <b>${p.symbol} ${p.side}</b> · entrada ${fmt(p.entry,autoDecimals(p.entry))}
+            · actual ${fmt(current,autoDecimals(current))}
+            · SL ${fmt(p.sl,autoDecimals(p.sl))}${p.tp1Hit?' <span class="tp1-badge">BE</span>':''}
+            · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
+            · qty ${p.qty.toFixed(6)}
+            · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
+            ${p.tp1Hit?'<div class="trade-note">✅ TP1 alcanzado · se cerró el 50% · SL movido a breakeven</div>':''}
+            ${p.noteEntry?`<div class="trade-note">📝 ${escapeHtml(p.noteEntry)}</div>`:''}
+          </div>
+          <div class="demo-pos-actions">
+            <button class="pos-btn" data-chart="${p.id}">📈 Ver gráfico</button>
+            <button class="pos-btn close-btn" data-close="${p.id}">✕ Cerrar</button>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div class="demo-pos" style="color:var(--ink-dim)">Sin posiciones abiertas.</div>';
+  document.getElementById('demoHistory').innerHTML=demo.history.slice(-8).reverse().map(h=>`
+    <div class="history-row">
+      <div>${h.symbol} ${h.side} · ${h.reason} · ${h.result>=0?'+':''}${money(h.result)}${h.commission?` <span style="color:var(--ink-dim)">(com. ${money(h.commission)})</span>`:''} · ${new Date(h.time).toLocaleString('es-AR')}</div>
+      ${h.noteEntry?`<div class="trade-note">📝 Entrada: ${escapeHtml(h.noteEntry)}</div>`:''}
+      ${h.exitNote?`<div class="trade-note">📝 Salida: ${escapeHtml(h.exitNote)}</div>`:''}
+    </div>`).join('');
+  if (typeof updateModalStats === 'function') updateModalStats();
+}
+
+function resetDemo(){
+  demo.balance=100; demo.start=100; demo.positions=[]; demo.history=[]; saveDemo();
+  equityCurve=[{time:Math.floor(Date.now()/1000), value:100}];
+  localStorage.setItem('demoEquityCurve', JSON.stringify(equityCurve));
+  renderEquityChart();
+}
+document.getElementById('demoReset').addEventListener('click',resetDemo);
+document.getElementById('alertsToggle').checked = alertsEnabled;
+if (equityCurve.length === 0) pushEquityPoint();
+
+function takeDemoTrade(sym){
+  const s=state[sym], setup=s?.setup;
+  if(!s || !setup || !setup.side) return;
+  const riskPct=Math.max(.1,Math.min(5,Number(document.getElementById('riskPct').value)||1));
+  const lev=Math.max(1,Math.min(20,Number(document.getElementById('leverage').value)||3));
+  const riskCash=demo.balance*riskPct/100;
+  const stopDist=Math.abs(setup.entry-setup.sl);
+  if(!stopDist || riskCash<=0) return;
+  const qty=riskCash/stopDist;
+  const notional=qty*setup.entry;
+  if(notional > demo.balance*lev) return alert('La posición excede el margen disponible con este apalancamiento.');
+  const openCommission = notional*COMMISSION_RATE;
+  const noteInput = document.getElementById('tradeNote');
+  const noteEntry = (noteInput?.value || '').trim().slice(0,200);
+  if (noteInput) noteInput.value = '';
+  demo.balance -= openCommission;
+  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,qtyOriginal:qty,lev,riskCash,time:Date.now(),tp1Hit:false,alertedSL:false,alertedTP:false,commissionPaid:openCommission,noteEntry};
+  demo.positions.push(p); saveDemo(); pushEquityPoint(); checkDemoPositions();
+}
+
+function closeDemoPosition(p, price, reason, exitNote){
+  const diff=p.side==='LONG'?price-p.entry:p.entry-price;
+  const commission = p.qty*price*COMMISSION_RATE;
+  const result=diff*p.qty - commission;
+  demo.balance += result;
+  demo.history.push({...p,result,exit:price,reason,time:Date.now(),commission,exitNote:exitNote||''});
+  demo.positions=demo.positions.filter(x=>x.id!==p.id);
+  pushEquityPoint();
+}
+
+function partialCloseAtTP1(p){
+  const closeQty = p.qty * 0.5;
+  const diff = p.side==='LONG' ? p.tp1-p.entry : p.entry-p.tp1;
+  const commission = closeQty*p.tp1*COMMISSION_RATE;
+  const result = diff*closeQty - commission;
+  demo.balance += result;
+  demo.history.push({...p, qty:closeQty, result, exit:p.tp1, reason:'TP1 (parcial 50%)', time:Date.now(), commission, exitNote:''});
+  p.qty -= closeQty;
+  p.tp1Hit = true;
+  p.sl = p.entry; // mover SL a breakeven: el resto del trade ya no puede terminar en pérdida
+  p.alertedSL = false; p.alertedTP = false; // el SL cambió, permitir re-alertar en el nuevo nivel
+  notify('TP1 alcanzado ✅', `${p.symbol} ${p.side}: se cerró el 50% y el SL se movió a breakeven.`);
+  playBeep(1046, 200);
+  pushEquityPoint();
+}
+
+function checkDemoPositions(){
+  for(const p of [...demo.positions]){
+    const s=state[p.sym]; if(!s) continue;
+    const price=s.last;
+    checkPriceAlerts(p, price);
+    const hitSL=p.side==='LONG'?price<=p.sl:price>=p.sl;
+    if(hitSL){
+      closeDemoPosition(p,p.sl,p.tp1Hit?'SL (breakeven)':'SL');
+      notify(p.tp1Hit?'Cerrada en breakeven':'Cerrada por SL', `${p.symbol} ${p.side}`);
+      playBeep(220,220);
+      continue;
     }
-  };
-
-  let lesson='rsi', step=0, playing=false, timer=null, hoverX=null;
-  const canvas=document.getElementById('learningChart'), ctx=canvas.getContext('2d');
-  const $=id=>document.getElementById(id);
-
-  function buildData(){
-    const n=70, data=[];
-    for(let i=0;i<n;i++){
-      let trend=i<18?-0.35:i<42?0.28:i<54?-0.12:0.45;
-      let wave=Math.sin(i/2.8)*1.3 + Math.sin(i/6.5)*1.7;
-      let noise=(Math.sin(i*7.13)*0.55);
-      let close=100 + i*trend + wave + noise;
-      if(i>=30&&i<=39) close+=Math.sin((i-30)/9*Math.PI)*5;
-      if(i>=50) close+= (i-50)*0.55;
-      let prev=i?data[i-1].close:close-0.4;
-      let high=Math.max(close,prev)+0.45+Math.abs(Math.sin(i))*0.3;
-      let low=Math.min(close,prev)-0.45-Math.abs(Math.cos(i))*0.25;
-      let vol=90+Math.abs(Math.sin(i/3))*30;
-      if(i>=30&&i<=39)vol+=80;
-      if(i===54||i===55)vol+=120;
-      data.push({open:prev,close,high,low,volume:vol});
+    if(!p.tp1Hit && p.tp1){
+      const hitTP1=p.side==='LONG'?price>=p.tp1:price<=p.tp1;
+      if(hitTP1){ partialCloseAtTP1(p); continue; }
     }
-    return data;
+    const hitTP2=p.side==='LONG'?price>=p.tp2:price<=p.tp2;
+    if(hitTP2){
+      closeDemoPosition(p,p.tp2,'TP2');
+      notify('TP2 alcanzado 🎯', `${p.symbol} ${p.side} cerrada en take profit.`);
+      playBeep(1318,220);
+    }
   }
-  const data=buildData();
+  saveDemo();
+}
+setInterval(checkDemoPositions,1000);
 
-  function ema(values,p){
-    const out=[]; const k=2/(p+1); let e=values[0];
-    values.forEach((v,i)=>{if(i===0)e=v;else e=v*k+e*(1-k);out.push(e)}); return out;
-  }
-  function calc(){
-    const closes=data.map(x=>x.close), e7=ema(closes,7), e25=ema(closes,25);
-    const rsi=closes.map((_,i)=>{
-      if(i<14)return 50;
-      let gain=0,loss=0;
-      for(let j=i-13;j<=i;j++){const d=closes[j]-closes[j-1];if(d>0)gain+=d;else loss-=d}
-      if(loss===0)return 100;
-      return 100-(100/(1+gain/loss));
-    });
-    const fast=ema(closes,12), slow=ema(closes,26);
-    const macd=fast.map((v,i)=>v-slow[i]), signal=ema(macd,9), hist=macd.map((v,i)=>v-signal[i]);
-    const atr=closes.map((_,i)=>{
-      if(i===0)return 1;
-      let sum=0,c=0;
-      for(let j=Math.max(1,i-13);j<=i;j++){sum+=Math.max(data[j].high-data[j].low,Math.abs(data[j].high-data[j-1].close),Math.abs(data[j].low-data[j-1].close));c++}
-      return sum/c;
-    });
-    const adx=closes.map((_,i)=> i<14?18:18+Math.min(28,Math.abs(e7[i]-e25[i])*3));
-    const volAvg=closes.map((_,i)=>{let a=data.slice(Math.max(0,i-9),i+1);return a.reduce((s,x)=>s+x.volume,0)/a.length});
-    return {e7,e25,rsi,macd,signal,hist,atr,adx,volAvg};
-  }
-  const ind=calc();
+function makeSetup(coin, data){
+  const {lastClose,highs,lows,closes,volumes,up,down,neutral,r,m,adxRes,atrVal,bb,ma7,ma25,lastCandleUp,volRatio}=data;
+  let scoreLong=50, scoreShort=50;
+  if(ma7>ma25){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
+  if(m.hist>0){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
+  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI)scoreLong+=15;else scoreShort+=15; }
+  if(volRatio>1.2){if(lastCandleUp)scoreLong+=7;else scoreShort+=7}
+  if(r<=30)scoreLong+=8;if(r>=70)scoreShort+=8;
+  const trend = up-down>=2?'alcista':down-up>=2?'bajista':'rango';
+  if(trend==='alcista')scoreLong+=6;if(trend==='bajista')scoreShort+=6;
+  scoreLong=Math.max(0,Math.min(100,scoreLong));scoreShort=Math.max(0,Math.min(100,scoreShort));
+  const best=Math.max(scoreLong,scoreShort);
+  const range = trend==='rango' || (adxRes && adxRes.adx<18);
+  let side=null;
+  if(!range && best>=68) side=scoreLong>scoreShort?'LONG':'SHORT';
+  const entry=lastClose;
+  const atr=Math.max(atrVal,lastClose*.001);
+  let sl,tp1,tp2;
+  if(side==='LONG'){sl=entry-1.2*atr;tp1=entry+1.5*atr;tp2=entry+2.4*atr}
+  else if(side==='SHORT'){sl=entry+1.2*atr;tp1=entry-1.5*atr;tp2=entry-2.4*atr}
+  const setup={symbol:coin.symbol,side,score:best,trend,entry,sl,tp1,tp2,range,updated:Date.now()};
+  state[coin.sym].setup=setup;
+  const card=document.getElementById('setup-'+coin.sym); if(!card)return;
+  card.className='setup-card '+(side==='LONG'?'up':side==='SHORT'?'down':'neutral');
+  document.getElementById('score-'+coin.sym).textContent=best+'/100';
+  document.getElementById('setupMain-'+coin.sym).textContent=range?'🟡 NO TRADE · RANGO / INDECISIÓN':side==='LONG'?'🟢 LONG · SETUP FAVORABLE':'🔴 SHORT · SETUP FAVORABLE';
+  document.getElementById('entry-'+coin.sym).textContent=fmt(entry,autoDecimals(entry));
+  document.getElementById('sl-'+coin.sym).textContent=side?fmt(sl,autoDecimals(entry)):'—';
+  document.getElementById('tp1-'+coin.sym).textContent=side?fmt(tp1,autoDecimals(entry)):'—';
+  document.getElementById('tp2-'+coin.sym).textContent=side?fmt(tp2,autoDecimals(entry)):'—';
+  document.getElementById('setupMeta-'+coin.sym).textContent=range
+    ? 'ADX débil / señales mixtas. Esperar ruptura y confirmación antes de entrar.'
+    : `Score ${best}/100 · riesgo calculable por distancia al SL · ${TF_LABELS[currentInterval]}. Esto es una regla algorítmica, no una predicción.`;
+  const btn=document.getElementById('take-'+coin.sym);
+  btn.disabled=!side;
+  btn.textContent=side?`Tomar ${side} en DEMO`:'No hay trade para tomar';
+  btn.onclick=()=>takeDemoTrade(coin.sym);
+}
 
-  function resize(){
-    const rect=canvas.getBoundingClientRect(), dpr=devicePixelRatio||1;
-    canvas.width=rect.width*dpr; canvas.height=330*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-    draw();
-  }
-  function draw(){
-    const W=canvas.clientWidth,H=330, pad={l:44,r:16,t:18,b:30}, end=Math.max(10,Math.min(data.length, 18+step*16));
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;
-    for(let i=0;i<5;i++){let y=pad.t+i*(H-pad.t-pad.b)/4;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();}
-    const slice=data.slice(0,end), min=Math.min(...slice.map(x=>x.low))-1, max=Math.max(...slice.map(x=>x.high))+1;
-    const x=i=>pad.l+i*(W-pad.l-pad.r)/Math.max(1,slice.length-1), y=v=>pad.t+(max-v)*(H-pad.t-pad.b)/(max-min);
-    const candleW=Math.max(3,(W-pad.l-pad.r)/slice.length*.62);
-    ctx.font='9px IBM Plex Mono, monospace';ctx.fillStyle='#7f8794';
-    for(let i=0;i<=4;i++){let v=min+(max-min)*(1-i/4);ctx.fillText(v.toFixed(1),5,pad.t+i*(H-pad.t-pad.b)/4+3)}
-    slice.forEach((c,i)=>{
-      const xx=x(i);ctx.strokeStyle='#858b98';ctx.beginPath();ctx.moveTo(xx,y(c.high));ctx.lineTo(xx,y(c.low));ctx.stroke();
-      ctx.fillStyle=c.close>=c.open?'#35d499':'#ff5c72';
-      const top=y(Math.max(c.open,c.close)), bot=y(Math.min(c.open,c.close));ctx.fillRect(xx-candleW/2,top,candleW,Math.max(1,bot-top));
-    });
-    function line(vals, upToEnd, dash){
-      ctx.beginPath();let first=true;ctx.setLineDash(dash||[]);
-      vals.slice(0,end).forEach((v,i)=>{if(first){ctx.moveTo(x(i),y(v));first=false}else ctx.lineTo(x(i),y(v))});
-      ctx.stroke();ctx.setLineDash([]);
-    }
-    if(lesson==='ema'||lesson==='rsi'||lesson==='macd'||lesson==='bb'||lesson==='adx'||lesson==='volume'||lesson==='atr'||lesson==='sr'){
-      ctx.lineWidth=1.5;ctx.strokeStyle='#d7a84c';line(ind.e7);ctx.strokeStyle='#6fa8dc';line(ind.e25);
-    }
-    if(lesson==='bb'){
-      const vals=slice.map((_,i)=>{let a=data.slice(Math.max(0,i-19),i+1),m=a.reduce((s,z)=>s+z.close,0)/a.length;let sd=Math.sqrt(a.reduce((s,z)=>s+(z.close-m)**2,0)/a.length);return {u:m+2*sd,l:m-2*sd}});
-      ctx.strokeStyle='rgba(215,168,76,.45)';ctx.lineWidth=1;line(vals.map(v=>v.u));line(vals.map(v=>v.l));
-    }
-    if(lesson==='sr'){
-      const level=slice[Math.max(2,Math.floor(slice.length*.62))].high;
-      ctx.strokeStyle='rgba(215,168,76,.8)';ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(pad.l,y(level));ctx.lineTo(W-pad.r,y(level));ctx.stroke();ctx.setLineDash([]);
-    }
-    if(lesson==='volume'){
-      const vh=65, base=H-pad.b-3;
-      slice.forEach((c,i)=>{let xx=x(i), h=Math.min(vh,c.volume/220*vh);ctx.fillStyle='rgba(120,135,155,.45)';ctx.fillRect(xx-candleW/2,base-h,candleW,h)});
-    }
-    if(hoverX!==null){ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(hoverX,pad.t);ctx.lineTo(hoverX,H-pad.b);ctx.stroke();ctx.setLineDash([])}
-  }
-
-  function update(){
-    const l=lessons[lesson], total=l.steps.length;
-    $('simTitle').textContent=l.title;
-    $('simStep').textContent=(step+1)+' / '+total;
-    const end=Math.min(data.length,18+step*16), i=end-1, d=ind;
-    $('simCandle').textContent='Vela '+end;
-    $('simPrice').textContent='US$ '+data[i].close.toFixed(2);
-    $('simRsi').textContent=d.rsi[i].toFixed(1);
-    $('simMacd').textContent=d.macd[i].toFixed(2);
-    $('simEma7').textContent=d.e7[i].toFixed(2);
-    $('simEma25').textContent=d.e25[i].toFixed(2);
-    $('simAdx').textContent=d.adx[i].toFixed(1);
-    $('simAtr').textContent=d.atr[i].toFixed(2);
-    $('lessonExplanation').innerHTML='<strong>'+l.steps[step][0]+':</strong> '+l.steps[step][1];
-    $('manualBody').innerHTML=l.manual.map(x=>'<div class="manual-point"><b>'+x[0]+'</b>'+x[1]+'</div>').join('');
-    $('challengeText').textContent=l.challenge;
-    $('challengeOptions').innerHTML=l.answers.map((a,j)=>'<button data-answer="'+a[1]+'">'+a[0]+'</button>').join('');
-    $('challengeResult').textContent='';
-    $('challengeOptions').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-      $('challengeResult').textContent=b.dataset.answer==='right'?'✓ Correcto. La idea es no reaccionar a un indicador aislado, sino esperar contexto y confirmación.':'✕ No necesariamente. Volvé a mirar el contexto y la explicación de arriba.';
-      $('challengeResult').style.color=b.dataset.answer==='right'?'var(--up)':'var(--down)';
-    });
-    draw();
-  }
-
-  document.querySelectorAll('.lesson-tab').forEach(btn=>btn.onclick=()=>{
-    document.querySelectorAll('.lesson-tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
-    lesson=btn.dataset.lesson;step=0;playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';update();
-  });
-  $('simBack').onclick=()=>{step=Math.max(0,step-1);update()};
-  $('simNext').onclick=()=>{step=Math.min(lessons[lesson].steps.length-1,step+1);update()};
-  $('resetSim').onclick=()=>{step=0;playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';update()};
-  $('playSim').onclick=()=>{
-    playing=!playing;
-    if(playing){
-      $('playSim').textContent='⏸ Pausar';
-      timer=setInterval(()=>{if(step>=lessons[lesson].steps.length-1){playing=false;clearInterval(timer);$('playSim').textContent='▶ Reproducir';return}step++;update()},Number($('simSpeed').value));
-    }else{clearInterval(timer);$('playSim').textContent='▶ Reproducir'}
-  };
-  $('simSpeed').onchange=()=>{if(playing){clearInterval(timer);$('playSim').click();$('playSim').click()}};
-  canvas.addEventListener('mousemove',e=>{
-    const r=canvas.getBoundingClientRect();hoverX=e.clientX-r.left;draw();
-    const sliceEnd=Math.min(data.length,18+step*16), idx=Math.round((hoverX-44)/(r.width-60)*Math.max(1,sliceEnd-1));
-    if(idx>=0&&idx<sliceEnd){const d=data[idx];$('chartTooltip').style.display='block';$('chartTooltip').style.left=Math.min(hoverX+10,r.width-150)+'px';$('chartTooltip').style.top='10px';$('chartTooltip').textContent='Vela '+(idx+1)+' · O '+d.open.toFixed(2)+' H '+d.high.toFixed(2)+' L '+d.low.toFixed(2)+' C '+d.close.toFixed(2)}
-  });
-  canvas.addEventListener('mouseleave',()=>{hoverX=null;$('chartTooltip').style.display='none';draw()});
-  window.addEventListener('resize',resize);
-  resize();update();
-})();
 
 function loadAllIndicators() { watchlist.forEach(loadIndicators); }
 loadAllIndicators();
