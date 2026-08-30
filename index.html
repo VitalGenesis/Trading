@@ -125,8 +125,9 @@
   .demo-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
   .demo-stats div{background:#18181f;border:1px solid var(--panel-edge);border-radius:7px;padding:8px}
   .demo-stats span{display:block;color:var(--ink-dim);font-size:9px}.demo-stats b{font-family:'IBM Plex Mono',monospace;font-size:12px}
-  .demo-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
-  .demo-controls label{font-size:10px;color:var(--ink-dim)}.demo-controls input{width:100%;margin-top:4px;background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;color:var(--ink);padding:7px}
+  .demo-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.demo-controls-main{grid-template-columns:1fr 1fr 1fr}
+  .demo-controls label{font-size:10px;color:var(--ink-dim)}.demo-controls input{width:100%;margin-top:4px;background:#18181f;border:1px solid var(--panel-edge);border-radius:6px;color:var(--ink);padding:7px}.demo-controls input:focus{outline:none;border-color:var(--amber)}
+  .demo-risk-hint{margin-top:7px;color:var(--ink-dim);font-size:9.5px;line-height:1.4;font-family:'IBM Plex Mono',monospace}
   .demo-positions,.demo-history{margin-top:10px}.demo-pos,.history-row{padding:8px;border-top:1px solid var(--panel-edge);font-size:10.5px}
   .demo-pos{display:flex;flex-direction:column;gap:6px}
   .demo-pos-info{line-height:1.6}
@@ -176,7 +177,7 @@
   .setup-meta{font-size:10px;color:var(--ink-dim);line-height:1.45;margin-top:8px}
   .demo-trade-btn{width:100%;margin-top:9px;padding:9px;border:0;border-radius:7px;background:var(--amber);color:#1a1206;font-family:'IBM Plex Mono',monospace;font-weight:700;cursor:pointer}
   .demo-trade-btn:disabled{opacity:.35;cursor:not-allowed}
-  @media(max-width:400px){.demo-stats{grid-template-columns:1fr 1fr}}
+  @media(max-width:400px){.demo-stats{grid-template-columns:1fr 1fr}.demo-controls-main{grid-template-columns:1fr 1fr}.demo-controls-main label:first-child{grid-column:1/-1}}
 
 </style>
 </head>
@@ -224,10 +225,12 @@
       <div><span>Racha</span><b id="statStreak">--</b></div>
       <div><span>Comisiones</span><b id="statCommissions">US$0.00</b></div>
     </div>
-    <div class="demo-controls">
-      <label>Riesgo %<input id="riskPct" type="number" min="0.1" max="5" step="0.1" value="1"></label>
-      <label>Apalancamiento<input id="leverage" type="number" min="1" max="20" step="1" value="3"></label>
+    <div class="demo-controls demo-controls-main">
+      <label>Saldo US$<input id="demoBalanceInput" type="number" min="0" step="0.01" value="100"></label>
+      <label>Riesgo %<input id="riskPct" type="number" min="0" max="100" step="0.1" value="1"></label>
+      <label>Apalancamiento<input id="leverage" type="number" min="1" max="125" step="1" value="3"></label>
     </div>
+    <div class="demo-risk-hint" id="demoRiskHint">Riesgo máximo por SL: US$1.00 · Comisión: 0.05% por lado sobre el nominal</div>
     <div class="demo-controls">
       <label style="grid-column:1/-1">Nota del trade (opcional) <input id="tradeNote" type="text" placeholder="¿Por qué tomás este trade?" maxlength="200"></label>
     </div>
@@ -303,7 +306,7 @@ let watchlist = [
    varias funciones que corren temprano (renderDemo(), buildRow, etc.) las
    pueden llegar a usar, y si están declaradas más abajo con const/let
    revienta todo con un ReferenceError (ya nos pasó una vez con posModal). */
-const COMMISSION_RATE = 0.001; // 0.1% por lado, similar a Binance spot
+const COMMISSION_RATE = 0.0005; // 0.05% por lado sobre el valor nominal de la posición
 let alertsEnabled = localStorage.getItem('alertsEnabled') !== '0';
 let equityCurve = JSON.parse(localStorage.getItem('demoEquityCurve') || '[]');
 let equityChart = null, equitySeries = null;
@@ -511,7 +514,7 @@ function computeStats(){
   const rMultiples = [];
   h.forEach(x => {
     if (x.result > 0) wins++;
-    totalCommission += (x.commission || 0);
+    totalCommission += (x.commissionTotal != null ? x.commissionTotal : ((x.commission || 0) + (x.commissionOpen || 0)));
     if (x.riskCash) rMultiples.push(x.result / x.riskCash);
   });
   const winRate = (wins / h.length) * 100;
@@ -1175,6 +1178,40 @@ function saveDemo(){
 }
 
 function money(n){ return 'US$' + Number(n).toFixed(2); }
+
+function clampDemoInputs(){
+  const balanceInput = document.getElementById('demoBalanceInput');
+  const riskInput = document.getElementById('riskPct');
+  const levInput = document.getElementById('leverage');
+  if (balanceInput) balanceInput.value = Math.max(0, Number(balanceInput.value) || 0);
+  if (riskInput) riskInput.value = Math.max(0, Math.min(100, Number(riskInput.value) || 0));
+  if (levInput) levInput.value = Math.max(1, Math.min(125, Number(levInput.value) || 1));
+}
+
+function syncDemoControls(){
+  const balanceInput = document.getElementById('demoBalanceInput');
+  if (balanceInput && document.activeElement !== balanceInput) balanceInput.value = Number(demo.balance.toFixed(2));
+  const riskPct = Math.max(0, Math.min(100, Number(document.getElementById('riskPct')?.value) || 0));
+  const lev = Math.max(1, Math.min(125, Number(document.getElementById('leverage')?.value) || 1));
+  const hint = document.getElementById('demoRiskHint');
+  if (hint) {
+    const riskCash = demo.balance * riskPct / 100;
+    hint.textContent = `Riesgo máximo por SL: ${money(riskCash)} · Comisión: ${(COMMISSION_RATE*100).toFixed(2)}% por lado sobre el nominal · ${lev}x`;
+  }
+}
+
+function applyManualBalance(){
+  const input = document.getElementById('demoBalanceInput');
+  if (!input) return;
+  const value = Number(input.value);
+  if (!Number.isFinite(value) || value < 0) { syncDemoControls(); return; }
+  demo.balance = value;
+  localStorage.setItem('demoBalance', demo.balance);
+  input.value = value.toFixed(2);
+  pushEquityPoint();
+  renderDemo();
+}
+
 renderDemo();
 
 function renderDemo(){
@@ -1196,6 +1233,7 @@ function renderDemo(){
   const streakEl = document.getElementById('statStreak');
   streakEl.textContent = stats.count ? stats.streak + (stats.streakType==='win' ? ' 🟢' : ' 🔴') : '--';
   document.getElementById('statCommissions').textContent = money(stats.totalCommission);
+  syncDemoControls();
   document.getElementById('demoPositions').innerHTML=demo.positions.length
     ? demo.positions.map(p=>{
         const st=state[p.sym];
@@ -1210,6 +1248,7 @@ function renderDemo(){
             · SL ${fmt(p.sl,autoDecimals(p.sl))}${p.tp1Hit?' <span class="tp1-badge">BE</span>':''}
             · TP ${fmt(p.tp2,autoDecimals(p.tp2))}
             · qty ${p.qty.toFixed(6)}
+            · nominal ${money(p.notional || (p.qty*p.entry))} · margen ${money(p.margin || ((p.qty*p.entry)/(p.lev||1)))} · ${p.lev||1}x
             · PnL <span style="color:${cls};font-family:'IBM Plex Mono',monospace;font-weight:700">${posPnl>=0?'+':''}${money(posPnl)}</span>
             ${p.tp1Hit?'<div class="trade-note">✅ TP1 alcanzado · se cerró el 50% · SL movido a breakeven</div>':''}
             ${p.noteEntry?`<div class="trade-note">📝 ${escapeHtml(p.noteEntry)}</div>`:''}
@@ -1237,52 +1276,67 @@ function resetDemo(){
   renderEquityChart();
 }
 document.getElementById('demoReset').addEventListener('click',resetDemo);
+document.getElementById('demoBalanceInput').addEventListener('change',applyManualBalance);
+document.getElementById('demoBalanceInput').addEventListener('keydown',(e)=>{if(e.key==='Enter'){e.preventDefault();applyManualBalance();}});
+document.getElementById('riskPct').addEventListener('input',()=>{clampDemoInputs();syncDemoControls();});
+document.getElementById('leverage').addEventListener('input',()=>{clampDemoInputs();syncDemoControls();});
 document.getElementById('alertsToggle').checked = alertsEnabled;
 if (equityCurve.length === 0) pushEquityPoint();
 
 function takeDemoTrade(sym){
   const s=state[sym], setup=s?.setup;
   if(!s || !setup || !setup.side) return;
-  const riskPct=Math.max(.1,Math.min(5,Number(document.getElementById('riskPct').value)||1));
-  const lev=Math.max(1,Math.min(20,Number(document.getElementById('leverage').value)||3));
+  clampDemoInputs();
+  const riskPct=Math.max(0,Math.min(100,Number(document.getElementById('riskPct').value)||0));
+  const lev=Math.max(1,Math.min(125,Number(document.getElementById('leverage').value)||1));
   const riskCash=demo.balance*riskPct/100;
   const stopDist=Math.abs(setup.entry-setup.sl);
-  if(!stopDist || riskCash<=0) return;
-  const qty=riskCash/stopDist;
+  if(!stopDist || riskCash<=0) return alert('El riesgo debe ser mayor que 0%.');
+
+  // El riesgo es la pérdida máxima al SL, incluyendo comisión de entrada y salida.
+  // La comisión es 0.05% por lado del nominal. El nominal = margen × leverage.
+  const totalLossPerUnit = stopDist + (setup.entry*COMMISSION_RATE) + (setup.sl*COMMISSION_RATE);
+  const qty=riskCash/totalLossPerUnit;
   const notional=qty*setup.entry;
-  if(notional > demo.balance*lev) return alert('La posición excede el margen disponible con este apalancamiento.');
-  const openCommission = notional*COMMISSION_RATE;
-  const noteInput = document.getElementById('tradeNote');
-  const noteEntry = (noteInput?.value || '').trim().slice(0,200);
-  if (noteInput) noteInput.value = '';
-  demo.balance -= openCommission;
-  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,qtyOriginal:qty,lev,riskCash,time:Date.now(),tp1Hit:false,alertedSL:false,alertedTP:false,commissionPaid:openCommission,noteEntry};
+  const margin=notional/lev;
+  const openCommission=notional*COMMISSION_RATE;
+  if(margin > demo.balance + 1e-9) return alert(`No alcanza el margen disponible. Necesitás ${money(margin)} de margen para ${money(notional)} nominales a ${lev}x.`);
+  if(openCommission >= demo.balance + 1e-9) return alert('La comisión de apertura supera el saldo disponible.');
+
+  const noteInput=document.getElementById('tradeNote');
+  const noteEntry=(noteInput?.value||'').trim().slice(0,200);
+  if(noteInput) noteInput.value='';
+  demo.balance-=openCommission;
+  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,qtyOriginal:qty,lev,riskCash,margin,notional,time:Date.now(),tp1Hit:false,alertedSL:false,alertedTP:false,commissionPaid:openCommission,noteEntry};
   demo.positions.push(p); saveDemo(); pushEquityPoint(); checkDemoPositions();
 }
 
 function closeDemoPosition(p, price, reason, exitNote){
   const diff=p.side==='LONG'?price-p.entry:p.entry-price;
-  const commission = p.qty*price*COMMISSION_RATE;
-  const result=diff*p.qty - commission;
-  demo.balance += result;
-  demo.history.push({...p,result,exit:price,reason,time:Date.now(),commission,exitNote:exitNote||''});
+  const commission=p.qty*price*COMMISSION_RATE;
+  const openCommission=Number(p.commissionPaid||0);
+  const result=diff*p.qty-commission;
+  demo.balance+=result;
+  demo.history.push({...p,result,exit:price,reason,time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,exitNote:exitNote||''});
   demo.positions=demo.positions.filter(x=>x.id!==p.id);
   pushEquityPoint();
 }
 
 function partialCloseAtTP1(p){
-  const closeQty = p.qty * 0.5;
-  const diff = p.side==='LONG' ? p.tp1-p.entry : p.entry-p.tp1;
-  const commission = closeQty*p.tp1*COMMISSION_RATE;
-  const result = diff*closeQty - commission;
-  demo.balance += result;
-  demo.history.push({...p, qty:closeQty, result, exit:p.tp1, reason:'TP1 (parcial 50%)', time:Date.now(), commission, exitNote:''});
-  p.qty -= closeQty;
-  p.tp1Hit = true;
-  p.sl = p.entry; // mover SL a breakeven: el resto del trade ya no puede terminar en pérdida
-  p.alertedSL = false; p.alertedTP = false; // el SL cambió, permitir re-alertar en el nuevo nivel
-  notify('TP1 alcanzado ✅', `${p.symbol} ${p.side}: se cerró el 50% y el SL se movió a breakeven.`);
-  playBeep(1046, 200);
+  const closeQty=p.qty*0.5;
+  const diff=p.side==='LONG'?p.tp1-p.entry:p.entry-p.tp1;
+  const commission=closeQty*p.tp1*COMMISSION_RATE;
+  const openCommission=Number(p.commissionPaid||0);
+  const result=diff*closeQty-commission;
+  demo.balance+=result;
+  demo.history.push({...p,qty:closeQty,result,exit:p.tp1,reason:'TP1 (parcial 50%)',time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,exitNote:''});
+  p.qty-=closeQty;
+  p.commissionPaid=0;
+  p.tp1Hit=true;
+  p.sl=p.entry;
+  p.alertedSL=false; p.alertedTP=false;
+  notify('TP1 alcanzado ✅',`${p.symbol} ${p.side}: se cerró el 50% y el SL se movió a breakeven.`);
+  playBeep(1046,200);
   pushEquityPoint();
 }
 
