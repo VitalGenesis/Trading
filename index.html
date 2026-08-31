@@ -222,6 +222,11 @@
   .backtest-results{font-size:10px;line-height:1.5;color:var(--ink-dim)}.bt-table{width:100%;border-collapse:collapse;font-size:9px}.bt-table th,.bt-table td{padding:4px;border-bottom:1px solid var(--panel-edge);text-align:left}.bt-table th{color:var(--ink)}
   .exposure-warning{padding:7px 8px;border-radius:6px;border:1px solid rgba(242,169,59,.45);background:rgba(242,169,59,.08);font-size:10px;line-height:1.45;color:var(--amber);margin-top:7px}
   .demo-slip{margin-top:7px;font-size:9.5px;color:var(--ink-dim)}
+  .market-context{margin-top:9px;padding:9px 10px;border:1px solid var(--panel-edge);border-radius:7px;background:#18181f;font-size:10.5px;line-height:1.45}
+  .market-context-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:10px;margin-bottom:5px}
+  .context-bias{font-weight:700}.context-bias.up{color:var(--up)}.context-bias.down{color:var(--down)}.context-bias.neutral{color:var(--ink-dim)}
+  .context-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:6px}.context-cell{padding:5px 6px;background:#1d1d25;border-radius:5px;color:var(--ink-dim);font-family:'IBM Plex Mono',monospace;font-size:9px}.context-cell b{display:block;color:var(--ink);font-size:10px;margin-top:2px}
+  .context-note{margin-top:6px;color:var(--ink-dim);font-size:9.5px}
 </style>
 </head>
 <body>
@@ -750,6 +755,16 @@ function buildRow(coin){
     </div>
 
     <div class="trend-badge neutral" id="trend-${coin.sym}"><span>Calculando estado de tendencia…</span></div>
+    <div class="market-context" id="context-${coin.sym}">
+      <div class="market-context-head"><span>CONTEXTO DEL PRECIO</span><span class="context-bias neutral" id="contextBias-${coin.sym}">Calculando…</span></div>
+      <div id="contextText-${coin.sym}">Separando estructura, tendencia y momentum para no confundir un retroceso con un cambio de tendencia.</div>
+      <div class="context-grid">
+        <div class="context-cell">Estructura<b id="ctxStructure-${coin.sym}">--</b></div>
+        <div class="context-cell">Tendencia<b id="ctxTrend-${coin.sym}">--</b></div>
+        <div class="context-cell">Momentum<b id="ctxMomentum-${coin.sym}">--</b></div>
+      </div>
+      <div class="context-note">Regla: la estructura reciente pesa más que un único cruce de MA/RSI. Una caída dentro de una estructura de máximos y mínimos crecientes se trata como pullback, no automáticamente como tendencia bajista.</div>
+    </div>
     <div class="setup-card neutral" id="setup-${coin.sym}">
       <div class="setup-top"><span class="setup-title">SETUP / SUGERENCIA</span><span class="setup-score" id="score-${coin.sym}">--/100</span></div>
       <div class="setup-main" id="setupMain-${coin.sym}">Analizando mercado…</div>
@@ -1283,13 +1298,13 @@ function updateTerminalLive(sym,last){
 }
 
 function buildAnalysisText(ctx) {
-  const { trendState, r, adxRes, macdHist, volRatio, lastCandleUp, tfLabel, bandState } = ctx;
+  const { trendState, r, adxRes, macdHist, volRatio, lastCandleUp, tfLabel, bandState, marketContext } = ctx;
   const parts = [];
 
   let trendSentence;
-  if (trendState === 'alcista') trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores describe una tendencia de corto plazo <b>alcista</b>`;
-  else if (trendState === 'bajista') trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores describe una tendencia de corto plazo <b>bajista</b>`;
-  else trendSentence = `En la temporalidad de ${tfLabel}, el conjunto de indicadores no muestra una tendencia clara — el mercado está más bien <b>lateral</b>`;
+  if (marketContext?.bias === 'alcista') trendSentence = `En ${tfLabel}, la <b>estructura del precio</b> es alcista aunque alguna media/momentum pueda estar corrigiendo`;
+  else if (marketContext?.bias === 'bajista') trendSentence = `En ${tfLabel}, la <b>estructura del precio</b> es bajista aunque pueda existir un rebote corto`;
+  else trendSentence = `En ${tfLabel}, estructura, tendencia y momentum están mezclados; no conviene reducirlo a solo alcista o bajista`;
 
   if (adxRes) {
     trendSentence += adxRes.adx >= 25
@@ -1439,29 +1454,36 @@ async function loadIndicators(coin) {
     const up = items.filter(i => i.tag === 'up').length;
     const down = items.filter(i => i.tag === 'down').length;
     const neutral = items.filter(i => i.tag === 'neutral').length;
-
-    let trendState = 'media';
-    if (adxRes && adxRes.adx < 18) trendState = 'media';
-    else if (up - down >= 2) trendState = 'alcista';
-    else if (down - up >= 2) trendState = 'bajista';
+    // La etiqueta principal ya no sale de contar indicadores redundantes.
+    // Estructura > tendencia > momentum; los osciladores aportan contexto.
+    const context = analyzeMarketContext(highs,lows,closes,ma7,ma25,m);
+    const trendState = context.bias;
 
     const trendEl = document.getElementById('trend-' + coin.sym);
     if (trendEl) {
       trendEl.className = 'trend-badge ' + (trendState === 'alcista' ? 'up' : trendState === 'bajista' ? 'down' : 'neutral');
       const trendArrow = trendState === 'alcista' ? '↑' : trendState === 'bajista' ? '↓' : '→';
-      const trendLabel = trendState === 'alcista' ? 'Tendencia alcista' : trendState === 'bajista' ? 'Tendencia bajista' : 'Tendencia media / lateral';
-      trendEl.innerHTML = `<span class="arrow">${trendArrow}</span>&nbsp; ${trendLabel} &nbsp;<small>(${up} alcistas, ${down} bajistas, ${neutral} neutrales en ${TF_LABELS[currentInterval]} — solo con fines de estudio)</small>`;
+      const trendLabel = context.label;
+      trendEl.innerHTML = `<span class="arrow">${trendArrow}</span>&nbsp; ${trendLabel} &nbsp;<small>estructura: ${context.structureText} · ${TF_LABELS[currentInterval]} — solo estudio</small>`;
     }
+
+    const cb=document.getElementById('contextBias-'+coin.sym), ct=document.getElementById('contextText-'+coin.sym);
+    if(cb){cb.textContent=context.label;cb.className='context-bias '+(context.bias==='alcista'?'up':context.bias==='bajista'?'down':'neutral');}
+    if(ct) ct.textContent=context.text;
+    const setCtx=(id,val)=>{const e=document.getElementById(id+'-'+coin.sym);if(e)e.textContent=val;};
+    setCtx('ctxStructure',context.structure==='alcista'?'ALCISTA':context.structure==='bajista'?'BAJISTA':'MIXTA');
+    setCtx('ctxTrend',context.trend==='alcista'?'ALCISTA':context.trend==='bajista'?'BAJISTA':'NEUTRAL');
+    setCtx('ctxMomentum',context.momentum==='alcista'?'ALCISTA':context.momentum==='bajista'?'BAJISTA':'NEUTRAL');
 
     const atrVal = atrCalc(highs, lows, closes, 14);
     const atrPct = (atrVal / lastClose) * 100;
-    makeSetup(coin, { lastClose, highs, lows, closes, volumes, up, down, neutral, r, m, adxRes, atrVal, bb, ma7, ma25, lastCandleUp, volRatio });
+    makeSetup(coin, { lastClose, highs, lows, closes, volumes, up, down, neutral, r, m, adxRes, atrVal, bb, ma7, ma25, lastCandleUp, volRatio, context });
     const infoItem = { name: 'ATR — volatilidad típica', text: `En promedio, una vela de ${TF_LABELS[currentInterval]} se mueve <b>±${atrPct.toFixed(2)}%</b> (${fmt(atrVal, decimals)} USDT). Referencia útil para pensar el tamaño del stop, no indica dirección.` };
 
     const bandState = lastClose >= bb.upper ? 'upper' : lastClose <= bb.lower ? 'lower' : 'inside';
     const analysisText = buildAnalysisText({
       trendState, r, adxRes, macdHist: m.hist, volRatio, lastCandleUp, bandState,
-      tfLabel: TF_LABELS[currentInterval]
+      tfLabel: TF_LABELS[currentInterval], marketContext: context
     });
     const analysisHTML = `<div class="ta-block"><div class="ta-title">Análisis técnico</div><div class="ta-text">${analysisText}</div></div>`;
 
@@ -1676,21 +1698,75 @@ function checkDemoPositions(){
 }
 setInterval(checkDemoPositions,1000);
 
+/* ---------- MOTOR DE CONTEXTO / ESTRUCTURA ----------
+   Objetivo: no llamar "bajista" a todo retroceso solo porque MA7<MA25 o MACD<0.
+   Se separan tres capas: estructura del precio, tendencia y momentum.
+   Esto no predice el futuro; reduce una simplificación que mezclaba señales redundantes.
+*/
+function pctChange(a,b){ return b ? ((a-b)/b)*100 : 0; }
+function slopePct(values, lookback=20){
+  if(!values || values.length<lookback+1) return 0;
+  const a=values.slice(-lookback);
+  const first=a[0], last=a[a.length-1];
+  return first ? ((last-first)/first)*100 : 0;
+}
+function findSwingPoints(highs,lows,span=2){
+  const sh=[], sl=[];
+  for(let i=span;i<highs.length-span;i++){
+    let hi=true,lo=true;
+    for(let j=1;j<=span;j++){ if(highs[i]<=highs[i-j]||highs[i]<highs[i+j]) hi=false; if(lows[i]>=lows[i-j]||lows[i]>lows[i+j]) lo=false; }
+    if(hi) sh.push({i,price:highs[i]});
+    if(lo) sl.push({i,price:lows[i]});
+  }
+  return {highs:sh,lows:sl};
+}
+function analyzeMarketContext(highs,lows,closes,ma7,ma25,m){
+  const n=Math.min(60,closes.length), H=highs.slice(-n), L=lows.slice(-n), C=closes.slice(-n);
+  const sw=findSwingPoints(H,L,2);
+  const hs=sw.highs.slice(-3), ls=sw.lows.slice(-3);
+  let structure='neutral', structureScore=0, structureText='Estructura mixta';
+  if(hs.length>=2 && ls.length>=2){
+    const hh=hs.at(-1).price>hs.at(-2).price, hl=ls.at(-1).price>ls.at(-2).price;
+    const lh=hs.at(-1).price<hs.at(-2).price, ll=ls.at(-1).price<ls.at(-2).price;
+    if(hh&&hl){structure='alcista';structureScore=2;structureText='máximos y mínimos crecientes';}
+    else if(lh&&ll){structure='bajista';structureScore=-2;structureText='máximos y mínimos decrecientes';}
+    else if(hl&&!lh){structure='alcista';structureScore=1;structureText='mínimos crecientes, máximos aún sin confirmar';}
+    else if(lh&&!ll){structure='bajista';structureScore=-1;structureText='máximos decrecientes, mínimos aún sin confirmar';}
+  }
+  const maSlope=slopePct(closes.slice(-Math.min(30,closes.length)),Math.min(20,Math.max(5,Math.min(20,closes.length-1))));
+  const maTrend=ma7>ma25 && maSlope>=0 ? 'alcista' : ma7<ma25 && maSlope<=0 ? 'bajista' : 'neutral';
+  const momentum=m.hist>0?'alcista':m.hist<0?'bajista':'neutral';
+  const recentLow=Math.min(...L), recentHigh=Math.max(...H), price=C.at(-1);
+  const rangePos=(price-recentLow)/Math.max(recentHigh-recentLow,1e-9);
+  let bias='neutral', label='NEUTRAL / TRANSICIÓN', text='Las capas no están suficientemente alineadas.';
+  if(structure==='alcista' && (maTrend!=='bajista' || rangePos>0.45)){ bias='alcista'; label='ALCISTA ESTRUCTURAL'; text=`La estructura reciente muestra ${structureText}. Un retroceso corto no se etiqueta automáticamente como cambio de tendencia.`; }
+  else if(structure==='bajista' && (maTrend!=='alcista' || rangePos<0.55)){ bias='bajista'; label='BAJISTA ESTRUCTURAL'; text=`La estructura reciente muestra ${structureText}. Un rebote corto no se etiqueta automáticamente como giro alcista.`; }
+  else if(maTrend==='alcista' && momentum==='alcista'){bias='alcista';label='ALCISTA EN CONFIRMACIÓN';text='Tendencia y momentum acompañan, pero la estructura todavía no está completamente confirmada.';}
+  else if(maTrend==='bajista' && momentum==='bajista'){bias='bajista';label='BAJISTA EN CONFIRMACIÓN';text='Tendencia y momentum acompañan, pero la estructura todavía no está completamente confirmada.';}
+  return {bias,label,text,structure,structureScore,structureText,trend:maTrend,momentum,slope:maSlope,recentLow,recentHigh,rangePos};
+}
 function scoreSnapshot(d){
-  const {lastClose,r,m,adxRes,volRatio,lastCandleUp,up,down}=d;
+  const {lastClose,r,m,adxRes,volRatio,lastCandleUp}=d;
   const ma7=sma(d.closes,7), ma25=sma(d.closes,25);
+  const ctx=d.context || analyzeMarketContext(d.highs,d.lows,d.closes,ma7,ma25,m);
   let long=50, short=50; const breakdown=[];
   const add=(label,l,s,reason)=>{long+=l;short+=s;breakdown.push({label,reason,long:l,short:s});};
-  if(ma7>ma25) add('MA 7 > MA 25',12,-8,'estructura corta alcista'); else add('MA 7 < MA 25',-8,12,'estructura corta bajista');
-  if(m.hist>0) add('MACD histograma > 0',12,-8,'momentum positivo'); else add('MACD histograma < 0',-8,12,'momentum negativo');
-  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI) add('ADX ≥ 25 +DI > -DI',15,0,'tendencia con fuerza alcista'); else add('ADX ≥ 25 -DI > +DI',0,15,'tendencia con fuerza bajista'); }
-  else breakdown.push({label:'ADX < 25',reason:'no suma: fuerza insuficiente para confirmar tendencia',long:0,short:0});
-  if(volRatio>1.2) add('Volumen > 1.2× media',lastCandleUp?7:0,lastCandleUp?0:7,'actividad superior al promedio'); else breakdown.push({label:'Volumen ≤ 1.2× media',reason:'sin confirmación de volumen',long:0,short:0});
-  if(r<=30) add('RSI ≤ 30',8,0,'sobreventa'); else if(r>=70) add('RSI ≥ 70',0,8,'sobrecompra'); else breakdown.push({label:'RSI 30–70',reason:'zona intermedia',long:0,short:0});
-  const trend=up-down>=2?'alcista':down-up>=2?'bajista':'rango';
-  if(trend==='alcista') add('Confluencia de indicadores alcistas',6,0,'mayoría alcista'); else if(trend==='bajista') add('Confluencia de indicadores bajistas',0,6,'mayoría bajista'); else breakdown.push({label:'Indicadores mixtos',reason:'no hay mayoría suficiente',long:0,short:0});
+  // MA y MACD son momentum/tendencia corta; no deben decidir solos la estructura.
+  if(ma7>ma25) add('MA 7 > MA 25',10,-10,'tendencia corta alcista'); else add('MA 7 < MA 25',-10,10,'tendencia corta bajista');
+  if(m.hist>0) add('MACD histograma > 0',8,-8,'momentum positivo'); else add('MACD histograma < 0',-8,8,'momentum negativo');
+  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI) add('ADX ≥ 25 +DI > -DI',10,0,'fuerza con dirección alcista'); else add('ADX ≥ 25 -DI > +DI',0,10,'fuerza con dirección bajista'); }
+  else breakdown.push({label:'ADX < 25',reason:'fuerza insuficiente para darle mucho peso a la dirección',long:0,short:0});
+  if(volRatio>1.2) add('Volumen > 1.2× media',lastCandleUp?5:0,lastCandleUp?0:5,'actividad superior al promedio'); else breakdown.push({label:'Volumen ≤ 1.2× media',reason:'sin confirmación de actividad',long:0,short:0});
+  // RSI extremo es contexto, no voto direccional automático: sobrecompra puede existir dentro de una tendencia alcista.
+  if(r<=30) add('RSI ≤ 30',5,0,'sobreventa: posible rebote, requiere estructura'); else if(r>=70) add('RSI ≥ 70',0,0,'sobrecompra: extensión, no implica SHORT por sí sola'); else breakdown.push({label:'RSI 30–70',reason:'zona intermedia',long:0,short:0});
+  if(ctx.structure==='alcista') add('Estructura de precio alcista',12,0,ctx.structureText);
+  else if(ctx.structure==='bajista') add('Estructura de precio bajista',0,12,ctx.structureText);
+  else breakdown.push({label:'Estructura mixta',reason:'máximos/mínimos sin secuencia clara',long:0,short:0});
+  if(ctx.trend==='alcista') add('Tendencia/slope de precio alcista',5,0,'pendiente y medias acompañan');
+  else if(ctx.trend==='bajista') add('Tendencia/slope de precio bajista',0,5,'pendiente y medias acompañan');
+  const trend=ctx.bias==='alcista'?'alcista':ctx.bias==='bajista'?'bajista':'rango';
   long=Math.max(0,Math.min(100,long)); short=Math.max(0,Math.min(100,short));
-  return {long,short,best:Math.max(long,short),trend,breakdown,ma7,ma25};
+  return {long,short,best:Math.max(long,short),trend,breakdown,ma7,ma25,context:ctx};
 }
 function structuralLevels(highs,lows,entry,side,atr){
   const n=Math.min(30,highs.length); const recentH=Math.max(...highs.slice(-n)); const recentL=Math.min(...lows.slice(-n));
@@ -1712,9 +1788,9 @@ function renderTransparentSetup(coin, d, score, side, mtf){
   const ok=checks.filter(x=>x[1]&&(side==='LONG'?x[2]==='alcista'||x[2]==='rebote potencial':x[2]==='bajista'||x[2]==='extensión bajista')).length; const total=checks.length;
   c.innerHTML=checks.map(x=>`<div class="check-row"><span>${x[0]}</span><span class="${x[1]?'check-ok':'check-no'}">${x[1]?'✓':'✕'} ${x[2]}</span></div>`).join('')+`<div class="check-row"><b>Condiciones favorables</b><b>${ok} de ${total}</b></div>`;
   const conf=mtf?.confidence??0, label=side?`Para confirmar ${side}, buscá al menos un timeframe mayor alineado.`:'Sin setup: primero esperá dirección y fuerza.';
-  beg.innerHTML=side?`<b>${side}</b> en ${TF_LABELS[currentInterval]}. ${conf>=1?'Hay al menos un timeframe mayor alineado.':'No hay confirmación mayor suficiente: tratala como señal débil/contradicha.'} Antes de entrar, verificá precio, estructura y contexto en tu gráfico principal.`:'<b>No hay entrada válida.</b> El score no supera el umbral o el mercado está en rango. Esperá una configuración más clara.';
+  beg.innerHTML=side?`<b>${side}</b> en ${TF_LABELS[currentInterval]}. ${d.context?.text||''} ${conf>=1?'Hay al menos un timeframe mayor alineado.':'No hay confirmación mayor suficiente: tratala como señal débil/contradicha.'} Antes de entrar, verificá el gráfico principal.`:'<b>No hay entrada válida.</b> La herramienta no encontró suficiente alineación entre estructura, tendencia y momentum. Eso es distinto de decir que el precio necesariamente va a bajar o subir.';
   mt.innerHTML=(mtf?.boxes||[]).map(x=>`<div class="mtf-box ${x.bias==='alcista'?'up':x.bias==='bajista'?'down':'neutral'}"><span>${x.tf}</span><b>${x.bias}</b><small>ADX ${x.adx?.toFixed(0)??'--'}</small></div>`).join('')||'<div class="mtf-box neutral">No aplica<b>1D</b></div>';
-  rule.innerHTML=`<b>Por qué estos números:</b> score ≥ 68 = umbral operativo conservador, no una probabilidad de 68%. ADX ≥ 25 se usa como referencia clásica de fuerza; ADX < 18 marca entorno débil/rango. Volumen 1.2× exige actividad 20% superior a su media. RSI 30/70 son niveles convencionales. SL parte de 1.2×ATR pero se desplaza detrás del swing de 30 velas para no ignorar estructura. TP1/TP2 usan 1.5×/2.4×ATR como objetivos heurísticos, no optimizados ni garantizados.`;
+  rule.innerHTML=`<b>Por qué estos números:</b> score ≥ 68 = umbral operativo conservador, no una probabilidad de 68%. ADX ≥ 25 se usa como referencia clásica de fuerza; ADX < 18 marca entorno débil/rango. Volumen 1.2× exige actividad 20% superior a su media. RSI 30/70 son niveles convencionales. La estructura del precio se evalúa con swings locales y tiene más peso que un único oscilador. SL parte de 1.2×ATR pero se desplaza detrás del swing de 30 velas para no ignorar estructura. TP1/TP2 usan 1.5×/2.4×ATR como objetivos heurísticos, no optimizados ni garantizados.`;
 }
 function getHigherTFs(tf){return tf==='5m'?['15m','1h']:tf==='15m'?['1h','4h']:tf==='1h'?['4h','1d']:tf==='4h'?['1d']:[];}
 async function getMTF(coin, side){
@@ -1724,8 +1800,8 @@ async function getMTF(coin, side){
 }
 function makeSetup(coin, data){
   const score=scoreSnapshot(data); let best=score.best; let side=null;
-  const range=score.trend==='rango'||(data.adxRes&&data.adxRes.adx<18);
-  if(!range&&best>=68)side=score.long>score.short?'LONG':'SHORT';
+  const range=(data.adxRes&&data.adxRes.adx<18) && score.trend==='rango';
+  if(!range&&best>=68){ const margin=Math.abs(score.long-score.short); if(score.context.bias==='alcista' && score.long>=score.short && (score.context.structure==='alcista'||margin>=18)) side='LONG'; else if(score.context.bias==='bajista' && score.short>=score.long && (score.context.structure==='bajista'||margin>=18)) side='SHORT'; }
   const entry=data.lastClose, atr=Math.max(data.atrVal,entry*.001), st=structuralLevels(data.highs,data.lows,entry,side,atr); let sl=st.sl,tp1,tp2;
   if(side==='LONG'){tp1=entry+1.5*atr;tp2=entry+2.4*atr}else if(side==='SHORT'){tp1=entry-1.5*atr;tp2=entry-2.4*atr}
   const setup={symbol:coin.symbol,side,score:best,scoreLong:score.long,scoreShort:score.short,trend:score.trend,entry,sl,tp1,tp2,range,updated:Date.now(),structure:{recentHigh:st.recentH,recentLow:st.recentL},data};
