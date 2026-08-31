@@ -210,6 +210,18 @@
   .demo-trade-btn:disabled{opacity:.35;cursor:not-allowed}
   @media(max-width:400px){.demo-stats{grid-template-columns:1fr 1fr}.demo-controls-main{grid-template-columns:1fr 1fr}.demo-controls-main label:first-child{grid-column:1/-1}}
 
+
+  .senior-panel{margin-top:10px;background:#17171e;border:1px solid var(--panel-edge);border-radius:8px;padding:10px 11px}
+  .senior-title{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px}
+  .beginner-summary{font-size:12px;line-height:1.5}.beginner-summary b{color:var(--ink)}
+  .score-breakdown{display:grid;gap:5px}.score-line{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;padding:5px 6px;border-radius:5px;background:#1c1c24}.score-line .pts{font-family:'IBM Plex Mono',monospace;font-weight:700}.pts.pos{color:var(--up)}.pts.neg{color:var(--down)}.pts.zero{color:var(--ink-dim)}
+  .checklist{display:grid;gap:4px}.check-row{display:flex;justify-content:space-between;font-size:10.5px}.check-ok{color:var(--up)}.check-no{color:var(--down)}
+  .mtf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.mtf-box{border:1px solid var(--panel-edge);border-radius:6px;padding:6px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px}.mtf-box b{display:block;font-size:11px;margin-top:3px}.mtf-box.up{border-color:rgba(53,212,153,.4)}.mtf-box.down{border-color:rgba(255,92,114,.4)}.mtf-box.neutral{border-color:rgba(127,135,148,.4)}
+  .rule-note{font-size:9.5px;color:var(--ink-dim);line-height:1.45;margin-top:7px}
+  .glossary-btn{border:1px solid var(--panel-edge);background:#18181f;color:var(--ink);padding:7px 9px;border-radius:6px;font-size:10px;font-family:'IBM Plex Mono',monospace;cursor:pointer}.glossary-btn:hover{border-color:var(--amber)}
+  .backtest-results{font-size:10px;line-height:1.5;color:var(--ink-dim)}.bt-table{width:100%;border-collapse:collapse;font-size:9px}.bt-table th,.bt-table td{padding:4px;border-bottom:1px solid var(--panel-edge);text-align:left}.bt-table th{color:var(--ink)}
+  .exposure-warning{padding:7px 8px;border-radius:6px;border:1px solid rgba(242,169,59,.45);background:rgba(242,169,59,.08);font-size:10px;line-height:1.45;color:var(--amber);margin-top:7px}
+  .demo-slip{margin-top:7px;font-size:9.5px;color:var(--ink-dim)}
 </style>
 </head>
 <body>
@@ -260,16 +272,19 @@
       <div><span>Racha</span><b id="statStreak">--</b></div>
       <div><span>Comisiones</span><b id="statCommissions">US$0.00</b></div>
     </div>
+    <div class="rule-note" id="segmentedStats">Desglose histórico: todavía no hay operaciones cerradas.</div>
     <div class="demo-controls demo-controls-main">
       <label>Saldo US$<input id="demoBalanceInput" type="number" min="0" step="0.01" value="100"></label>
       <label>Riesgo %<input id="riskPct" type="number" min="0" max="100" step="0.1" value="1"></label>
       <label>Apalancamiento<input id="leverage" type="number" min="1" max="125" step="1" value="3"></label>
     </div>
     <div class="demo-risk-hint" id="demoRiskHint">Riesgo máximo por SL: US$1.00 · Comisión: 0.05% por lado sobre el nominal</div>
+    <div class="demo-controls" style="margin-top:7px"><label>Slippage %<input id="slippagePct" type="number" min="0" max="0.5" step="0.01" value="0.05"></label><div class="demo-slip">Se aplica aleatoriamente en apertura y cierre para no sobreestimar el resultado demo.</div></div>
     <div class="demo-controls">
       <label style="grid-column:1/-1">Nota del trade (opcional) <input id="tradeNote" type="text" placeholder="¿Por qué tomás este trade?" maxlength="200"></label>
     </div>
     <label class="alerts-toggle"><input type="checkbox" id="alertsToggle" checked> 🔔 Alertas de precio (sonido + notificación cerca de SL/TP)</label>
+    <div class="exposure-warning" id="exposureHost">Exposición direccional: LONG US$0.00 · SHORT US$0.00 · neta US$0.00</div>
 
     <button class="ind-toggle" id="equityToggle" style="margin-top:10px">
       <span>📈 Curva de equity</span><span class="chev" id="equityChev">▾</span>
@@ -291,6 +306,30 @@
   </section>
 
   <div class="board" id="board"></div>
+
+  <section class="senior-panel" id="globalTools">
+    <div class="senior-title">Herramientas de validación</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="glossary-btn" id="glossaryBtn">? Glosario</button>
+      <button class="glossary-btn" id="backtestBtn">▶ Backtest simple</button>
+    </div>
+    <div class="rule-note">El backtest usa velas históricas cerradas y el mismo núcleo de scoring de esta página. No es una garantía: sirve para detectar dónde el algoritmo tuvo mejor o peor comportamiento.</div>
+    <div class="backtest-results" id="backtestResults" style="margin-top:8px"></div>
+  </section>
+  <div class="modal-overlay" id="glossaryModal">
+    <div class="modal-box">
+      <div class="modal-head"><div class="modal-title">Glosario rápido</div><button class="modal-close" id="glossaryClose">×</button></div>
+      <div class="indicators open" style="max-height:none">
+        <div class="ind-row"><div class="ind-dot up"></div><div class="ind-body"><div class="ind-name">MA 7 / MA 25</div><div class="ind-text">Promedios del precio. Si la corta está arriba de la larga, el movimiento reciente es relativamente más fuerte.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">RSI</div><div class="ind-text">Mide velocidad de subidas y bajadas. 70/30 son zonas de extensión, no órdenes automáticas.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">Estocástico</div><div class="ind-text">Mira dónde cerró el precio dentro de su rango reciente. K/D ayudan a observar cambios de momentum.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">MACD</div><div class="ind-text">Compara medias para estimar momentum. El cruce y la posición respecto de 0 son contexto, no certeza.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">ADX</div><div class="ind-text">Mide fuerza de tendencia. No dice por sí solo si es alcista o bajista; +DI/-DI aportan dirección.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">ATR</div><div class="ind-text">Mide volatilidad típica. Sirve para dimensionar stops y entender si el mercado se está moviendo mucho.</div></div></div>
+        <div class="ind-row"><div class="ind-dot neutral"></div><div class="ind-body"><div class="ind-name">Bollinger</div><div class="ind-text">Una media y bandas alrededor de ella. El toque de una banda indica extensión relativa, no reversión segura.</div></div></div>
+      </div>
+    </div>
+  </div>
 
   <div class="modal-overlay" id="posModal">
     <div class="modal-box">
@@ -544,6 +583,12 @@ function checkPriceAlerts(p, price){
   }
 }
 
+function segmentedStats(){
+  const out={direction:{},score:{},tf:{}}; const groups=[['direction',h=>h.side],['score',h=>h.setupScore>=80?'80-100':h.setupScore>=68?'68-79':'<68'],['tf',h=>TF_LABELS[h.setupTimeframe]||h.setupTimeframe]];
+  for(const [bucket,fn] of groups){for(const h of demo.history){const k=fn(h);if(!out[bucket][k])out[bucket][k]={n:0,w:0,r:0};const g=out[bucket][k];g.n++;if(h.result>0)g.w++;if(h.riskCash)g.r+=h.result/h.riskCash;}for(const g of Object.values(out[bucket])){g.win=g.n?g.w/g.n*100:0;g.avgR=g.n?g.r/g.n:0;}}
+  return out;
+}
+function exposureMetrics(){const opens=demo.positions;let long=0,short=0;for(const p of opens){const n=Number(p.margin||p.notional/p.lev||0);if(p.side==='LONG')long+=n;else short+=n;}const correlated=opens.length>=2&&((long>0&&short===0)||(short>0&&long===0));return {long,short,net:long-short,correlated};}
 function computeStats(){
   const h = demo.history;
   if (!h.length) return { count: 0, winRate: 0, avgR: 0, streak: 0, streakType: null, totalCommission: 0 };
@@ -1517,7 +1562,9 @@ function renderDemo(){
   const streakEl = document.getElementById('statStreak');
   streakEl.textContent = stats.count ? stats.streak + (stats.streakType==='win' ? ' 🟢' : ' 🔴') : '--';
   document.getElementById('statCommissions').textContent = money(stats.totalCommission);
+  const seg=segmentedStats(); let segEl=document.getElementById('segmentedStats'); if(segEl){const fmtSeg=o=>Object.entries(o).map(([k,v])=>`${k}: ${v.win.toFixed(0)}% WR / ${v.avgR.toFixed(2)}R (n=${v.n})`).join(' · '); segEl.innerHTML=`<b>Desglose histórico:</b><br>Dirección: ${fmtSeg(seg.direction)||'sin datos'}<br>Score: ${fmtSeg(seg.score)||'sin datos'}<br>Timeframe: ${fmtSeg(seg.tf)||'sin datos'}`;}
   syncDemoControls();
+  const ex=exposureMetrics(); const exHost=document.getElementById('exposureHost'); if(exHost) exHost.innerHTML=`Exposición direccional: <b>LONG ${money(ex.long)}</b> · <b>SHORT ${money(ex.short)}</b> · neta ${money(ex.net)}${ex.correlated?' · ⚠️ 2+ posiciones correlacionadas en la misma dirección':''}`;
   document.getElementById('demoPositions').innerHTML=demo.positions.length
     ? demo.positions.map(p=>{
         const st=state[p.sym];
@@ -1577,61 +1624,29 @@ document.getElementById('leverage').addEventListener('input',()=>{clampDemoInput
 document.getElementById('alertsToggle').checked = alertsEnabled;
 if (equityCurve.length === 0) pushEquityPoint();
 
+function getSlippageRate(){const v=Number(document.getElementById('slippagePct')?.value);return Math.max(0,Math.min(.5,Number.isFinite(v)?v:0.05))/100;}
+function randomSlippedPrice(price,side,isEntry){const r=getSlippageRate()*(0.5+Math.random()); if(side==='LONG') return isEntry?price*(1+r):price*(1-r); return isEntry?price*(1-r):price*(1+r);}
 function takeDemoTrade(sym){
-  const s=state[sym], setup=s?.setup;
-  if(!s || !setup || !setup.side) return;
-  clampDemoInputs();
-  const riskPct=Math.max(0,Math.min(100,Number(document.getElementById('riskPct').value)||0));
-  const lev=Math.max(1,Math.min(125,Number(document.getElementById('leverage').value)||1));
-  const riskCash=demo.balance*riskPct/100;
-  const stopDist=Math.abs(setup.entry-setup.sl);
-  if(!stopDist || riskCash<=0) return alert('El riesgo debe ser mayor que 0%.');
-
-  // El riesgo es la pérdida máxima al SL, incluyendo comisión de entrada y salida.
-  // La comisión es 0.05% por lado del nominal. El nominal = margen × leverage.
-  const totalLossPerUnit = stopDist + (setup.entry*COMMISSION_RATE) + (setup.sl*COMMISSION_RATE);
-  const qty=riskCash/totalLossPerUnit;
-  const notional=qty*setup.entry;
-  const margin=notional/lev;
-  const openCommission=notional*COMMISSION_RATE;
-  if(margin > demo.balance + 1e-9) return alert(`No alcanza el margen disponible. Necesitás ${money(margin)} de margen para ${money(notional)} nominales a ${lev}x.`);
-  if(openCommission >= demo.balance + 1e-9) return alert('La comisión de apertura supera el saldo disponible.');
-
-  const noteInput=document.getElementById('tradeNote');
-  const noteEntry=(noteInput?.value||'').trim().slice(0,200);
-  if(noteInput) noteInput.value='';
-  demo.balance-=openCommission;
-  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry:setup.entry,sl:setup.sl,tp1:setup.tp1,tp2:setup.tp2,qty,qtyOriginal:qty,lev,riskCash,margin,notional,time:Date.now(),tp1Hit:false,alertedSL:false,alertedTP:false,commissionPaid:openCommission,noteEntry};
-  demo.positions.push(p); saveDemo(); pushEquityPoint(); checkDemoPositions();
+  const s=state[sym], setup=s?.setup; if(!s||!setup||!setup.side)return;
+  clampDemoInputs(); const riskPct=Math.max(0,Math.min(100,Number(document.getElementById('riskPct').value)||0)),lev=Math.max(1,Math.min(125,Number(document.getElementById('leverage').value)||1)),riskCash=demo.balance*riskPct/100;
+  let live=s.last||setup.entry; const drift=Math.abs(live-setup.entry)/setup.entry;
+  if(drift>0.0015){if(!confirm(`El precio se movió ${(drift*100).toFixed(2)}% desde el setup (${fmt(setup.entry,autoDecimals(setup.entry))} → ${fmt(live,autoDecimals(live))}). Recalcular SL/TP al precio actual y ejecutar?`))return; const ratio=live/setup.entry; setup.sl*=ratio;setup.tp1*=ratio;setup.tp2*=ratio;setup.entry=live;}
+  const entry=randomSlippedPrice(live,setup.side,true); const scale=entry/live; const sl=setup.sl*scale,tp1=setup.tp1*scale,tp2=setup.tp2*scale; const stopDist=Math.abs(entry-sl); if(!stopDist||riskCash<=0)return alert('El riesgo debe ser mayor que 0%.');
+  const totalLossPerUnit=stopDist+entry*COMMISSION_RATE+sl*COMMISSION_RATE; const qty=riskCash/totalLossPerUnit,notional=qty*entry,margin=notional/lev,openCommission=notional*COMMISSION_RATE;
+  if(margin>demo.balance+1e-9)return alert(`No alcanza el margen disponible. Necesitás ${money(margin)} de margen.`); if(openCommission>=demo.balance+1e-9)return alert('La comisión de apertura supera el saldo disponible.');
+  const noteInput=document.getElementById('tradeNote'),noteEntry=(noteInput?.value||'').trim().slice(0,200);if(noteInput)noteInput.value=''; demo.balance-=openCommission;
+  const p={id:Date.now(),sym,symbol:setup.symbol,side:setup.side,entry,sl,tp1,tp2,qty,qtyOriginal:qty,lev,riskCash,margin,notional,time:Date.now(),tp1Hit:false,alertedSL:false,alertedTP:false,commissionPaid:openCommission,noteEntry,slippageOpen:entry-live,setupScore:setup.score,setupTimeframe:currentInterval,setupMtf:setup.mtf||null};
+  demo.positions.push(p);saveDemo();pushEquityPoint();checkDemoPositions();
 }
 
 function closeDemoPosition(p, price, reason, exitNote){
-  const diff=p.side==='LONG'?price-p.entry:p.entry-price;
-  const commission=p.qty*price*COMMISSION_RATE;
-  const openCommission=Number(p.commissionPaid||0);
-  const result=diff*p.qty-commission;
-  demo.balance+=result;
-  demo.history.push({...p,result,exit:price,reason,time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,exitNote:exitNote||''});
-  demo.positions=demo.positions.filter(x=>x.id!==p.id);
-  pushEquityPoint();
+  const execPrice=randomSlippedPrice(price,p.side,false); const diff=p.side==='LONG'?execPrice-p.entry:p.entry-execPrice; const commission=p.qty*execPrice*COMMISSION_RATE; const openCommission=Number(p.commissionPaid||0); const result=diff*p.qty-commission;
+  demo.balance+=result; demo.history.push({...p,result,exit:execPrice,expectedExit:price,reason,time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,slippageClose:execPrice-price,exitNote:exitNote||''}); demo.positions=demo.positions.filter(x=>x.id!==p.id);pushEquityPoint();
 }
 
 function partialCloseAtTP1(p){
-  const closeQty=p.qty*0.5;
-  const diff=p.side==='LONG'?p.tp1-p.entry:p.entry-p.tp1;
-  const commission=closeQty*p.tp1*COMMISSION_RATE;
-  const openCommission=Number(p.commissionPaid||0);
-  const result=diff*closeQty-commission;
-  demo.balance+=result;
-  demo.history.push({...p,qty:closeQty,result,exit:p.tp1,reason:'TP1 (parcial 50%)',time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,exitNote:''});
-  p.qty-=closeQty;
-  p.commissionPaid=0;
-  p.tp1Hit=true;
-  p.sl=p.entry;
-  p.alertedSL=false; p.alertedTP=false;
-  notify('TP1 alcanzado ✅',`${p.symbol} ${p.side}: se cerró el 50% y el SL se movió a breakeven.`);
-  playBeep(1046,200);
-  pushEquityPoint();
+  const closeQty=p.qty*0.5, execPrice=randomSlippedPrice(p.tp1,p.side,false), diff=p.side==='LONG'?execPrice-p.entry:p.entry-execPrice, commission=closeQty*execPrice*COMMISSION_RATE, openCommission=Number(p.commissionPaid||0), result=diff*closeQty-commission;
+  demo.balance+=result;demo.history.push({...p,qty:closeQty,result,exit:execPrice,expectedExit:p.tp1,reason:'TP1 (parcial 50%)',time:Date.now(),commission,commissionOpen:openCommission,commissionTotal:openCommission+commission,slippageClose:execPrice-p.tp1,exitNote:''});p.qty-=closeQty;p.commissionPaid=0;p.tp1Hit=true;p.sl=p.entry;p.alertedSL=false;p.alertedTP=false;notify('TP1 alcanzado ✅',`${p.symbol} ${p.side}: se cerró el 50% y el SL se movió a breakeven.`);playBeep(1046,200);pushEquityPoint();
 }
 
 function checkDemoPositions(){
@@ -1661,45 +1676,70 @@ function checkDemoPositions(){
 }
 setInterval(checkDemoPositions,1000);
 
+function scoreSnapshot(d){
+  const {lastClose,r,m,adxRes,volRatio,lastCandleUp,up,down}=d;
+  const ma7=sma(d.closes,7), ma25=sma(d.closes,25);
+  let long=50, short=50; const breakdown=[];
+  const add=(label,l,s,reason)=>{long+=l;short+=s;breakdown.push({label,reason,long:l,short:s});};
+  if(ma7>ma25) add('MA 7 > MA 25',12,-8,'estructura corta alcista'); else add('MA 7 < MA 25',-8,12,'estructura corta bajista');
+  if(m.hist>0) add('MACD histograma > 0',12,-8,'momentum positivo'); else add('MACD histograma < 0',-8,12,'momentum negativo');
+  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI) add('ADX ≥ 25 +DI > -DI',15,0,'tendencia con fuerza alcista'); else add('ADX ≥ 25 -DI > +DI',0,15,'tendencia con fuerza bajista'); }
+  else breakdown.push({label:'ADX < 25',reason:'no suma: fuerza insuficiente para confirmar tendencia',long:0,short:0});
+  if(volRatio>1.2) add('Volumen > 1.2× media',lastCandleUp?7:0,lastCandleUp?0:7,'actividad superior al promedio'); else breakdown.push({label:'Volumen ≤ 1.2× media',reason:'sin confirmación de volumen',long:0,short:0});
+  if(r<=30) add('RSI ≤ 30',8,0,'sobreventa'); else if(r>=70) add('RSI ≥ 70',0,8,'sobrecompra'); else breakdown.push({label:'RSI 30–70',reason:'zona intermedia',long:0,short:0});
+  const trend=up-down>=2?'alcista':down-up>=2?'bajista':'rango';
+  if(trend==='alcista') add('Confluencia de indicadores alcistas',6,0,'mayoría alcista'); else if(trend==='bajista') add('Confluencia de indicadores bajistas',0,6,'mayoría bajista'); else breakdown.push({label:'Indicadores mixtos',reason:'no hay mayoría suficiente',long:0,short:0});
+  long=Math.max(0,Math.min(100,long)); short=Math.max(0,Math.min(100,short));
+  return {long,short,best:Math.max(long,short),trend,breakdown,ma7,ma25};
+}
+function structuralLevels(highs,lows,entry,side,atr){
+  const n=Math.min(30,highs.length); const recentH=Math.max(...highs.slice(-n)); const recentL=Math.min(...lows.slice(-n));
+  const buffer=Math.max(atr*0.15,entry*0.0005);
+  let sl=side==='LONG'?entry-1.2*atr:entry+1.2*atr;
+  if(side==='LONG' && recentL<entry) sl=Math.min(sl,recentL-buffer);
+  if(side==='SHORT' && recentH>entry) sl=Math.max(sl,recentH+buffer);
+  return {sl,recentH,recentL,buffer};
+}
+function ensureSeniorPanels(sym){
+  const card=document.getElementById('setup-'+sym); if(!card)return;
+  if(!document.getElementById('senior-'+sym)) card.insertAdjacentHTML('afterend',`<div class="senior-panel" id="senior-${sym}"><div class="senior-title">Lectura transparente</div><div class="beginner-summary" id="beginner-${sym}">Analizando…</div><div class="senior-title" style="margin-top:10px">Desglose del score</div><div class="score-breakdown" id="breakdown-${sym}"></div><div class="senior-title" style="margin-top:10px">Checklist de condiciones</div><div class="checklist" id="checklist-${sym}"></div><div class="senior-title" style="margin-top:10px">Confluencia multi-timeframe</div><div class="mtf-grid" id="mtf-${sym}"><div class="mtf-box neutral">Superior<b>Calculando…</b></div></div><div class="rule-note" id="rule-${sym}"></div></div>`);
+}
+function renderTransparentSetup(coin, d, score, side, mtf){
+  ensureSeniorPanels(coin.sym); const b=document.getElementById('breakdown-'+coin.sym), c=document.getElementById('checklist-'+coin.sym), beg=document.getElementById('beginner-'+coin.sym), rule=document.getElementById('rule-'+coin.sym), mt=document.getElementById('mtf-'+coin.sym); if(!b)return;
+  const chosen=side==='LONG'?'long':'short';
+  b.innerHTML=score.breakdown.map(x=>{const pts=x[chosen];return `<div class="score-line"><span>${x.label}<small style="color:var(--ink-dim)"> · ${x.reason}</small></span><span class="pts ${pts>0?'pos':pts<0?'neg':'zero'}">${pts>0?'+':''}${pts}</span></div>`}).join('')+`<div class="score-line"><b>Base</b><span class="pts zero">50</span></div>`;
+  const checks=[['MA 7/25',score.ma7>score.ma25,score.ma7>score.ma25?'alcista':'bajista'],['MACD',d.m.hist>0,d.m.hist>0?'alcista':'bajista'],['ADX +DI/-DI',d.adxRes?.adx>=25,d.adxRes?.adx>=25?(d.adxRes.plusDI>d.adxRes.minusDI?'alcista':'bajista'):'sin fuerza'],['Volumen',d.volRatio>1.2,d.lastCandleUp?'alcista':'bajista'],['RSI extremo',d.r<=30||d.r>=70,d.r<=30?'rebote potencial':d.r>=70?'extensión alcista':'neutral'],['Mayoría',score.trend!=='rango',score.trend]];
+  const ok=checks.filter(x=>x[1]&&(side==='LONG'?x[2]==='alcista'||x[2]==='rebote potencial':x[2]==='bajista'||x[2]==='extensión bajista')).length; const total=checks.length;
+  c.innerHTML=checks.map(x=>`<div class="check-row"><span>${x[0]}</span><span class="${x[1]?'check-ok':'check-no'}">${x[1]?'✓':'✕'} ${x[2]}</span></div>`).join('')+`<div class="check-row"><b>Condiciones favorables</b><b>${ok} de ${total}</b></div>`;
+  const conf=mtf?.confidence??0, label=side?`Para confirmar ${side}, buscá al menos un timeframe mayor alineado.`:'Sin setup: primero esperá dirección y fuerza.';
+  beg.innerHTML=side?`<b>${side}</b> en ${TF_LABELS[currentInterval]}. ${conf>=1?'Hay al menos un timeframe mayor alineado.':'No hay confirmación mayor suficiente: tratala como señal débil/contradicha.'} Antes de entrar, verificá precio, estructura y contexto en tu gráfico principal.`:'<b>No hay entrada válida.</b> El score no supera el umbral o el mercado está en rango. Esperá una configuración más clara.';
+  mt.innerHTML=(mtf?.boxes||[]).map(x=>`<div class="mtf-box ${x.bias==='alcista'?'up':x.bias==='bajista'?'down':'neutral'}"><span>${x.tf}</span><b>${x.bias}</b><small>ADX ${x.adx?.toFixed(0)??'--'}</small></div>`).join('')||'<div class="mtf-box neutral">No aplica<b>1D</b></div>';
+  rule.innerHTML=`<b>Por qué estos números:</b> score ≥ 68 = umbral operativo conservador, no una probabilidad de 68%. ADX ≥ 25 se usa como referencia clásica de fuerza; ADX < 18 marca entorno débil/rango. Volumen 1.2× exige actividad 20% superior a su media. RSI 30/70 son niveles convencionales. SL parte de 1.2×ATR pero se desplaza detrás del swing de 30 velas para no ignorar estructura. TP1/TP2 usan 1.5×/2.4×ATR como objetivos heurísticos, no optimizados ni garantizados.`;
+}
+function getHigherTFs(tf){return tf==='5m'?['15m','1h']:tf==='15m'?['1h','4h']:tf==='1h'?['4h','1d']:tf==='4h'?['1d']:[];}
+async function getMTF(coin, side){
+  const tfs=getHigherTFs(currentInterval); if(!tfs.length)return {confidence:0,boxes:[]};
+  const boxes=await Promise.all(tfs.map(async tf=>{try{const ks=await fetchKlinesFast(coin.symbol,tf);const h=ks.map(k=>+k[2]),l=ks.map(k=>+k[3]),cl=ks.map(k=>+k[4]);const mm=macd(cl), a=adxCalc(h,l,cl,14);const ma7=sma(cl,7),ma25=sma(cl,25);let bias=ma7>ma25&&mm.hist>0?'alcista':ma7<ma25&&mm.hist<0?'bajista':'neutral';return {tf:TF_LABELS[tf],bias,adx:a?.adx??0};}catch(e){return {tf:TF_LABELS[tf],bias:'sin datos',adx:0};}}));
+  const want=side==='LONG'?'alcista':'bajista'; return {confidence:boxes.filter(x=>x.bias===want).length,boxes};
+}
 function makeSetup(coin, data){
-  const {lastClose,highs,lows,closes,volumes,up,down,neutral,r,m,adxRes,atrVal,bb,ma7,ma25,lastCandleUp,volRatio}=data;
-  let scoreLong=50, scoreShort=50;
-  if(ma7>ma25){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
-  if(m.hist>0){scoreLong+=12;scoreShort-=8}else{scoreShort+=12;scoreLong-=8}
-  if(adxRes && adxRes.adx>=25){ if(adxRes.plusDI>adxRes.minusDI)scoreLong+=15;else scoreShort+=15; }
-  if(volRatio>1.2){if(lastCandleUp)scoreLong+=7;else scoreShort+=7}
-  if(r<=30)scoreLong+=8;if(r>=70)scoreShort+=8;
-  const trend = up-down>=2?'alcista':down-up>=2?'bajista':'rango';
-  if(trend==='alcista')scoreLong+=6;if(trend==='bajista')scoreShort+=6;
-  scoreLong=Math.max(0,Math.min(100,scoreLong));scoreShort=Math.max(0,Math.min(100,scoreShort));
-  const best=Math.max(scoreLong,scoreShort);
-  const range = trend==='rango' || (adxRes && adxRes.adx<18);
-  let side=null;
-  if(!range && best>=68) side=scoreLong>scoreShort?'LONG':'SHORT';
-  const entry=lastClose;
-  const atr=Math.max(atrVal,lastClose*.001);
-  let sl,tp1,tp2;
-  if(side==='LONG'){sl=entry-1.2*atr;tp1=entry+1.5*atr;tp2=entry+2.4*atr}
-  else if(side==='SHORT'){sl=entry+1.2*atr;tp1=entry-1.5*atr;tp2=entry-2.4*atr}
-  const setup={symbol:coin.symbol,side,score:best,trend,entry,sl,tp1,tp2,range,updated:Date.now()};
-  state[coin.sym].setup=setup;
+  const score=scoreSnapshot(data); let best=score.best; let side=null;
+  const range=score.trend==='rango'||(data.adxRes&&data.adxRes.adx<18);
+  if(!range&&best>=68)side=score.long>score.short?'LONG':'SHORT';
+  const entry=data.lastClose, atr=Math.max(data.atrVal,entry*.001), st=structuralLevels(data.highs,data.lows,entry,side,atr); let sl=st.sl,tp1,tp2;
+  if(side==='LONG'){tp1=entry+1.5*atr;tp2=entry+2.4*atr}else if(side==='SHORT'){tp1=entry-1.5*atr;tp2=entry-2.4*atr}
+  const setup={symbol:coin.symbol,side,score:best,scoreLong:score.long,scoreShort:score.short,trend:score.trend,entry,sl,tp1,tp2,range,updated:Date.now(),structure:{recentHigh:st.recentH,recentLow:st.recentL},data};
+  state[coin.sym].setup=setup; state[coin.sym].analysisData=data;
   const card=document.getElementById('setup-'+coin.sym); if(!card)return;
   card.className='setup-card '+(side==='LONG'?'up':side==='SHORT'?'down':'neutral');
   document.getElementById('score-'+coin.sym).textContent=best+'/100';
   document.getElementById('setupMain-'+coin.sym).textContent=range?'🟡 NO TRADE · RANGO / INDECISIÓN':side==='LONG'?'🟢 LONG · SETUP FAVORABLE':'🔴 SHORT · SETUP FAVORABLE';
-  document.getElementById('entry-'+coin.sym).textContent=fmt(entry,autoDecimals(entry));
-  document.getElementById('sl-'+coin.sym).textContent=side?fmt(sl,autoDecimals(entry)):'—';
-  document.getElementById('tp1-'+coin.sym).textContent=side?fmt(tp1,autoDecimals(entry)):'—';
-  document.getElementById('tp2-'+coin.sym).textContent=side?fmt(tp2,autoDecimals(entry)):'—';
-  document.getElementById('setupMeta-'+coin.sym).textContent=range
-    ? 'ADX débil / señales mixtas. Esperar ruptura y confirmación antes de entrar.'
-    : `Score ${best}/100 · riesgo calculable por distancia al SL · ${TF_LABELS[currentInterval]}. Esto es una regla algorítmica, no una predicción.`;
-  const btn=document.getElementById('take-'+coin.sym);
-  btn.disabled=!side;
-  btn.textContent=side?`Tomar ${side} en DEMO`:'No hay trade para tomar';
-  btn.onclick=()=>takeDemoTrade(coin.sym);
+  document.getElementById('entry-'+coin.sym).textContent=fmt(entry,autoDecimals(entry)); document.getElementById('sl-'+coin.sym).textContent=side?fmt(sl,autoDecimals(entry)):'—'; document.getElementById('tp1-'+coin.sym).textContent=side?fmt(tp1,autoDecimals(entry)):'—'; document.getElementById('tp2-'+coin.sym).textContent=side?fmt(tp2,autoDecimals(entry)):'—';
+  document.getElementById('setupMeta-'+coin.sym).textContent=range?'ADX < 18 o señales mixtas: se evita forzar una entrada.':'Umbral 68 alcanzado. Esto es un score heurístico, no una probabilidad ni predicción.';
+  const btn=document.getElementById('take-'+coin.sym); btn.disabled=!side; btn.textContent=side?`Tomar ${side} en DEMO`:'No hay trade para tomar'; btn.onclick=()=>takeDemoTrade(coin.sym);
+  renderTransparentSetup(coin,data,score,side,null);
+  getMTF(coin,side).then(mtf=>{ if(state[coin.sym]?.setup?.updated!==setup.updated)return; setup.mtf=mtf; const aligned=side&&mtf.confidence>=1; if(side&&!aligned){setup.score=Math.max(0,best-10);setup.side=null;setup.mtfWeak=true;card.className='setup-card neutral';document.getElementById('setupMain-'+coin.sym).textContent='🟠 SEÑAL DÉBIL · SIN CONFLUENCIA MAYOR';document.getElementById('take-'+coin.sym).disabled=true;document.getElementById('take-'+coin.sym).textContent='Esperar confirmación mayor';} renderTransparentSetup(coin,data,score,setup.side,mtf); });
 }
-
 
 let indicatorsLoading = false;
 let indicatorsReloadQueued = false;
@@ -1727,6 +1767,20 @@ setInterval(() => {
   // No iniciar otra tanda si la anterior todavía está trabajando.
   if (!indicatorsLoading) loadAllIndicators();
 }, 60000);
+
+/* ---------- GLOSARIO / BACKTEST ---------- */
+document.getElementById('glossaryBtn').addEventListener('click',()=>document.getElementById('glossaryModal').classList.add('open'));
+document.getElementById('glossaryClose').addEventListener('click',()=>document.getElementById('glossaryModal').classList.remove('open'));
+document.getElementById('glossaryModal').addEventListener('click',e=>{if(e.target.id==='glossaryModal')e.currentTarget.classList.remove('open');});
+function backtestSignalAt(ks,i){
+  const slice=ks.slice(0,i+1),o=slice.map(k=>+k[1]),h=slice.map(k=>+k[2]),l=slice.map(k=>+k[3]),c=slice.map(k=>+k[4]),v=slice.map(k=>+k[5]); if(c.length<40)return null;
+  const rr=rsi(c,14),mm=macd(c),aa=adxCalc(h,l,c,14),atr=atrCalc(h,l,c,14),avg=sma(v.slice(0,-1),Math.min(20,v.length-1)),vr=avg?v.at(-1)/avg:1,up=c.at(-1)>o.at(-1); const score=scoreSnapshot({closes:c,highs:h,lows:l,r:rr,m:mm,adxRes:aa,atrVal:atr,volRatio:vr,lastCandleUp:up,up:0,down:0});
+  const side=!((score.trend==='rango')||(aa&&aa.adx<18))&&score.best>=68?(score.long>score.short?'LONG':'SHORT'):null; if(!side)return null; const entry=c.at(-1),A=Math.max(atr,entry*.001),st=structuralLevels(h,l,entry,side,A),sl=st.sl,tp=side==='LONG'?entry+2.4*A:entry-2.4*A; return {side,score:score.best,entry,sl,tp};
+}
+async function runBacktest(){
+  const host=document.getElementById('backtestResults');host.textContent='Ejecutando…'; const coin=watchlist[0]; try{const ks=await fetchKlinesFast(coin.symbol,currentInterval); const results=[]; for(let i=40;i<ks.length-1;i++){const sig=backtestSignalAt(ks,i);if(!sig)continue; const next=+ks[i+1][4],win=sig.side==='LONG'?next>sig.entry:next<sig.entry; results.push({...sig,win});} if(!results.length){host.textContent='No hubo setups suficientes en las velas cargadas.';return;} const n=results.length,w=results.filter(x=>x.win).length,wr=w/n*100,avgR=results.reduce((s,x)=>{const risk=Math.abs(x.entry-x.sl),r=x.side==='LONG'?(x.win?(x.tp-x.entry):nextR(x)):0;return s+(x.win?Math.abs((x.tp-x.entry)/risk):-1)},0)/n; const dirs={LONG:results.filter(x=>x.side==='LONG'),SHORT:results.filter(x=>x.side==='SHORT')}; const row=k=>{const a=dirs[k];return a.length?`${k}: ${(a.filter(x=>x.win).length/a.length*100).toFixed(0)}% (n=${a.length})`:`${k}: sin señales`;}; host.innerHTML=`<b>Backtest orientativo · ${coin.label} · ${TF_LABELS[currentInterval]}</b><br>Señales: ${n} · Win rate: ${wr.toFixed(1)}% · R medio simplificado: ${avgR.toFixed(2)}R<br>${row('LONG')} · ${row('SHORT')}<br><small>Limitación: entrada en cierre de la vela señal y evaluación contra la siguiente vela; no modela ejecución intrabar, fees ni MTF. Es diagnóstico, no prueba de rentabilidad futura.</small>`;}catch(e){host.textContent='No se pudo ejecutar el backtest: '+e.message;}}
+function nextR(){return -1;}
+document.getElementById('backtestBtn').addEventListener('click',runBacktest);
 </script>
 </body>
 </html>
